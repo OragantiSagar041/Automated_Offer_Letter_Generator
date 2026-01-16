@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+jinja2
+python-multipart
+python-dotenv
+openai
+weasyprint
+mysql-connector-python
+psycopg2-binary
