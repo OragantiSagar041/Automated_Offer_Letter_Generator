@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import AddEmployeeModal from './components/AddEmployeeModal';
 import LetterModal from './components/LetterModal';
+import { generatePDFDoc } from './utils/pdfGenerator';
+import jsPDF from 'jspdf';
+
+// Hardcoded API URL to fix Vercel Env Issue
+const API_URL = 'https://automated-offer-letter-generator-1.onrender.com';
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -9,10 +14,16 @@ function App() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedEmployeeForEdit, setSelectedEmployeeForEdit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All'); // 'All', 'Pending', 'Offer Sent'
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkSending, setIsBulkSending] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState("");
 
   const fetchEmployees = () => {
     setLoading(true);
-    fetch('http://127.0.0.1:8000/employees/')
+    fetch(`${API_URL}/employees/`)
       .then(res => res.json())
       .then(data => {
         setEmployees(data);
@@ -24,7 +35,6 @@ function App() {
       });
   };
 
-  // Fetch employees from our FastAPI Backend
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -32,8 +42,8 @@ function App() {
   const handleSaveEmployee = (employeeData) => {
     const isEdit = !!selectedEmployeeForEdit;
     const url = isEdit
-      ? `http://127.0.0.1:8000/employees/${selectedEmployeeForEdit.id}`
-      : 'http://127.0.0.1:8000/employees/';
+      ? `${API_URL}/employees/${selectedEmployeeForEdit.id}`
+      : `${API_URL}/employees/`;
     const method = isEdit ? 'PUT' : 'POST';
 
     fetch(url, {
@@ -49,7 +59,6 @@ function App() {
         } else {
           try {
             const errorData = await res.json();
-            // Pydantic validation errors are arrays, others are strings
             const errorMsg = errorData.detail
               ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
               : "Unknown Error";
@@ -74,7 +83,7 @@ function App() {
     if (!confirm("Are you sure you want to delete this employee? This cannot be undone.")) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/employees/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/employees/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchEmployees();
       } else {
@@ -85,12 +94,88 @@ function App() {
     }
   };
 
+  const toggleSelection = (id) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  const handleBulkSend = async () => {
+    if (!confirm(`Send Offer Letters to ${selectedIds.size} candidates?`)) return;
+
+    setIsBulkSending(true);
+    setBulkProgress(`Starting...`);
+
+    const ids = Array.from(selectedIds);
+    let successCount = 0;
+
+    for (let i = 0; i < ids.length; i++) {
+      const empId = ids[i];
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) continue;
+
+      setBulkProgress(`Sending to ${emp.name} (${i + 1}/${ids.length})...`);
+
+      try {
+        // 1. Generate Letter Content
+        const genRes = await fetch(`${API_URL}/letters/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_id: emp.id,
+            letter_type: "Offer Letter", // Default to Offer Letter for Bulk
+            tone: "Professional"
+          })
+        });
+        const genData = await genRes.json();
+        const content = genData.content;
+
+        // 2. Generate PDF
+        const doc = await generatePDFDoc(content);
+        const pdfBase64 = doc.output('datauristring');
+
+        // 3. Send Email
+        const subject = `Offer of Employment - ${emp.name}`;
+        await fetch(`${API_URL}/email/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_id: emp.id,
+            letter_content: content,
+            pdf_base64: pdfBase64,
+            subject: subject,
+            custom_message: `Dear ${emp.name},\n\nWe are pleased to offer you a position at Arah Infotech.\nPlease find your offer letter attached.\n\nRegards,\nHR Team`
+          })
+        });
+
+        successCount++;
+
+      } catch (err) {
+        console.error(`Failed for ${emp.name}`, err);
+      }
+    }
+
+    setIsBulkSending(false);
+    setBulkProgress("");
+    alert(`Bulk Send Complete! Sent ${successCount}/${ids.length} emails.`);
+    setSelectedIds(new Set()); // Clear selection
+    fetchEmployees(); // Refresh statuses
+  };
+
   // --- Derived State for Stats & Search ---
-  const filteredEmployees = employees.filter(emp =>
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmployees = employees.filter(emp => {
+    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.department.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = filterStatus === 'All' ? true : emp.status === filterStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = {
     total: employees.length,
@@ -100,6 +185,25 @@ function App() {
 
   return (
     <div className="container" style={{ padding: '2rem', maxWidth: '98vw', margin: '0 auto' }}>
+
+      {/* BULK PROGRESS OVERLAY */}
+      {isBulkSending && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.9)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white'
+        }}>
+          <h2>🚀 Bulk Sending in Progress...</h2>
+          <p style={{ fontSize: '1.5rem' }}>{bulkProgress}</p>
+          <div style={{ marginTop: '1rem', width: '300px', height: '10px', background: '#334155', borderRadius: '5px' }}>
+            <div style={{
+              width: `${(selectedIds.size > 0 ? (parseInt(bulkProgress.match(/\d+/)) / selectedIds.size) * 100 : 0)}%`,
+              height: '100%', background: '#34d399', borderRadius: '5px', transition: 'width 0.3s'
+            }} />
+          </div>
+        </div>
+      )}
+
       <header style={{ marginBottom: '4rem', textAlign: 'center' }}>
         <img
           src="/arah_logo.jpg"
@@ -128,45 +232,85 @@ function App() {
           </div>
         </div>
 
-        {/* --- Toolbar: Search + Add --- */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 style={{ fontSize: '2rem', margin: 0 }}>Employee Directory</h2>
+        {/* --- Toolbar: Search + Add + TABS --- */}
+        <div style={{ marginBottom: '2rem' }}>
+          {/* Status Tabs */}
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem', borderBottom: '1px solid #334155', paddingBottom: '0.5rem' }}>
+            {['All', 'Pending', 'Offer Sent'].map(status => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: filterStatus === status ? '3px solid #646cff' : '3px solid transparent',
+                  color: filterStatus === status ? '#fff' : '#94a3b8',
+                  fontSize: '1.2rem',
+                  fontWeight: filterStatus === status ? 'bold' : 'normal',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
 
-          <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'flex-end' }}>
-            <input
-              type="text"
-              placeholder="🔍 Search by name, role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '14px 20px',
-                borderRadius: '8px',
-                border: '1px solid #475569',
-                background: '#0f172a',
-                color: 'white',
-                fontSize: '1.1rem',
-                width: '300px'
-              }}
-            />
-            <button
-              onClick={() => {
-                setSelectedEmployeeForEdit(null); // Clear any previous edit state
-                setIsModalOpen(true);
-              }}
-              style={{
-                background: '#646cff',
-                color: 'white',
-                border: 'none',
-                padding: '14px 28px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              + Add Employee
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <h2 style={{ fontSize: '2rem', margin: 0 }}>Employee Directory</h2>
+
+            {/* BULK ACTION BUTTON */}
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBulkSend}
+                style={{
+                  background: '#e11d48', color: 'white', border: 'none',
+                  padding: '14px 28px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.1rem',
+                  cursor: 'pointer', boxShadow: '0 4px 10px rgba(225, 29, 72, 0.4)',
+                  animation: 'pulse 2s infinite'
+                }}
+              >
+                🚀 Send Offers to ({selectedIds.size}) Candidates
+              </button>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'flex-end' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search by name, role..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: '14px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #475569',
+                  background: '#0f172a',
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  width: '300px'
+                }}
+              />
+              <button
+                onClick={() => {
+                  setSelectedEmployeeForEdit(null); // Clear any previous edit state
+                  setIsModalOpen(true);
+                }}
+                style={{
+                  background: '#646cff',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px 28px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                + Add Employee
+              </button>
+            </div>
           </div>
         </div>
 
@@ -193,25 +337,35 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
             {filteredEmployees.map(emp => (
               <div key={emp.id} style={{
-                background: '#1e293b',
+                background: selectedIds.has(emp.id) ? '#334155' : '#1e293b', // Highlight Selection
                 padding: '2rem',
                 borderRadius: '12px',
                 border: '1px solid #334155',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                transition: 'background 0.2s'
               }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+                      {/* CHECKBOX */}
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(emp.id)}
+                        onChange={() => toggleSelection(emp.id)}
+                        style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#646cff' }}
+                      />
+
                       <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.4rem' }}>{emp.name}</h3>
                       {emp.status === 'Offer Sent' && (
                         <span style={{
                           background: '#064e3b', color: '#34d399',
                           padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold'
                         }}>
-                          ✅ Offer Sent
+                          ✅ Sent
                         </span>
                       )}
                     </div>

@@ -9,3 +9,4 @@ openai
 weasyprint
 mysql-connector-python
 psycopg2-binary
+requests

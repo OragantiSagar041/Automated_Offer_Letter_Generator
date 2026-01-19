@@ -40,7 +40,8 @@ def send_offer_email(request: EmailRequest, db: Session = Depends(database.get_d
         candidate_name=employee.name,
         letter_content=request.letter_content,
         pdf_content=pdf_bytes,
-        email_body=request.custom_message
+        email_body=request.custom_message,
+        subject=getattr(request, 'subject', None) # Safely get subject
     )
     
     # 3. Update Status if Sent

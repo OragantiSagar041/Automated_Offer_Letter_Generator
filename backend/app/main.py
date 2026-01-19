@@ -27,3 +27,4 @@ app.include_router(email.router)
 @app.get("/")
 def home():
     return {"status": "running", "message": "Welcome to the Auto Office Letter Generator API"}
+# Touch to reload

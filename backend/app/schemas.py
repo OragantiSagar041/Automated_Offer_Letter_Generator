@@ -49,6 +49,13 @@ class LetterRequest(BaseModel):
     letter_type: str # "Offer", "Appraisal", etc.
     tone: Optional[str] = "Professional"
 
+class EmailRequest(BaseModel):
+    employee_id: int
+    letter_content: str
+    pdf_base64: str
+    custom_message: Optional[str] = None
+    subject: Optional[str] = None
+
 class LetterResponse(BaseModel):
     content: str
     file_path: Optional[str] = None

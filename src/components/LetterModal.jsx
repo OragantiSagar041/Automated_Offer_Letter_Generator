@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
+import { generatePDFDoc } from '../utils/pdfGenerator'; // Reuse utility if possible, but keeping logic here is fine too as they are slightly different (modal has state)
+
+const API_URL = 'https://automated-offer-letter-generator-1.onrender.com';
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
@@ -12,7 +15,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
     const handleGenerate = () => {
         setLoading(true);
-        fetch('http://127.0.0.1:8000/letters/generate', {
+        fetch(`${API_URL}/letters/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -58,6 +61,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         let cursorY = 60; // Start Y position (after Logo)
 
         doc.setFontSize(12);
+        doc.setFont("courier", "normal"); // Use Monospace for table alignment
 
         splitText.forEach(line => {
             // Check if we need a new page
@@ -274,14 +278,18 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                                         btn.innerText = 'Sending Email...';
 
                                         // 2. Send to Backend
-                                        const res = await fetch('http://127.0.0.1:8000/email/send', {
+                                        // Dynamic Subject
+                                        const subject = `${letterType} - ${employee.name}`; // e.g., "Experience Letter - John Doe"
+
+                                        const res = await fetch(`${API_URL}/email/send`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({
                                                 employee_id: employee.id,
                                                 letter_content: generatedContent,
                                                 pdf_base64: pdfBase64,
-                                                custom_message: emailBody
+                                                custom_message: emailBody,
+                                                subject: subject
                                             })
                                         });
 

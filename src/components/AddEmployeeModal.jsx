@@ -23,7 +23,13 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+        // Ensure basic_salary is a number (send 0 if empty, backend ignores it anyway or recalculates)
+        const payload = {
+            ...formData,
+            basic_salary: formData.basic_salary ? parseFloat(formData.basic_salary) : 0,
+            ctc: parseFloat(formData.ctc) // Ensure CTC is number too
+        };
+        onSave(payload);
     };
 
     return (
@@ -55,8 +61,10 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2rem' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Employee ID</label>
-                            <input required name="emp_id" placeholder="EMP001" value={formData.emp_id} onChange={handleChange} disabled={!!initialData}
+                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                Employee ID <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'normal' }}>(Auto-generated if empty)</span>
+                            </label>
+                            <input name="emp_id" placeholder="Auto-generated" value={formData.emp_id} onChange={handleChange} disabled={!!initialData}
                                 style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: initialData ? '#1e293b' : '#334155', color: initialData ? '#94a3b8' : 'white', cursor: initialData ? 'not-allowed' : 'text' }} />
                         </div>
                         <div>

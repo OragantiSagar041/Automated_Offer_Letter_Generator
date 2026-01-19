@@ -23,6 +23,13 @@ def create_employee(employee: schemas.EmployeeCreate, db: Session = Depends(data
     
     # Create Employee Record
     try:
+        # Auto-generate emp_id if missing
+        if not emp_data.get('emp_id'):
+            # Find max PK to determine sequence
+            max_id = db.query(models.Employee.id).order_by(models.Employee.id.desc()).first()
+            next_seq = (max_id[0] + 1) if max_id else 1
+            emp_data['emp_id'] = f"EMP{next_seq:03d}" # e.g. EMP001, EMP002
+        
         new_employee = models.Employee(**emp_data)
         db.add(new_employee)
         db.commit()

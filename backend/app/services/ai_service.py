@@ -54,6 +54,7 @@ class AIService:
         A hardcoded premium template for Arah Infotech Pvt Ltd.
         """
         if "offer" in letter_type.lower():
+            # ... (Existing Offer Letter code) ...
             return f"""
 Arah Infotech Pvt Ltd
 123, Tech Park, Innovation City, India
@@ -97,11 +98,9 @@ Your scheduled date of joining will be {data.get('joining_date')}.
 You will be on a probation period of 6 months from the date of joining.
 
 4. TERMS & CONDITIONS
-This offer is subject to the verification of your credentials and successful completion of necessary background checks. You are required to submit self-attested copies of your educational and professional documents on the day of joining.
+This offer is subject to the verification of your credentials and successful completion of necessary background checks.
 
-We are excited to have you onboard and look forward to a successful journey together.
-
-Please sign and return the duplicate copy of this letter as a token of your acceptance.
+We are excited to have you onboard!
 
 For Arah Infotech Pvt Ltd,
 
@@ -109,6 +108,83 @@ For Arah Infotech Pvt Ltd,
 (Signature)
 HR Manager
 """
+
+        elif "experience" in letter_type.lower():
+            return f"""
+TO WHOM IT MAY CONCERN
+
+Date: {data.get('today', '2026-01-19')}
+
+This is to certify that Mr./Ms. {data.get('name')} was employed with Arah Infotech Pvt Ltd as "{data.get('role')}" in the {data.get('department')} Department.
+
+Tenure: {data.get('joining_date')} to Present
+
+During their tenure with us, we found them to be sincere, hardworking, and dedicated. They have displayed professional conduct and successfully handled major responsibilities.
+
+We wish them all the best in their future endeavors.
+
+For Arah Infotech Pvt Ltd,
+
+
+(Signature)
+HR Manager
+"""
+
+        elif "relieving" in letter_type.lower():
+            return f"""
+RELIEVING LETTER
+
+Date: {data.get('today', '2026-01-19')}
+
+To,
+{data.get('name')}
+{data.get('role')}
+
+Subject: Relieving from duties
+
+Dear {data.get('name')},
+
+This has reference to your resignation letter. We would like to inform you that your resignation has been accepted, and you are relieved from your duties at Arah Infotech Pvt Ltd effective from closing hours of today.
+
+We certify that you have no pending dues or company assets.
+
+We wish you success in your future career.
+
+For Arah Infotech Pvt Ltd,
+
+
+(Signature)
+HR Manager
+"""
+
+        elif "appraisal" in letter_type.lower():
+            return f"""
+APPRAISAL LETTER
+
+Date: {data.get('today', '2026-01-19')}
+
+To,
+{data.get('name')}
+{data.get('role')}
+
+Subject: Performance Appraisal & Salary Revision
+
+Dear {data.get('name')},
+
+In recognition of your performance and contribution to Arah Infotech Pvt Ltd during the last year, the management is pleased to revise your remuneration.
+
+Revised Designation: {data.get('role')} (Senior Grade)
+Revised CTC: {data.get('ctc')} (Effective from next month)
+
+We look forward to your continued contribution and wish you a successful career with us.
+
+For Arah Infotech Pvt Ltd,
+
+
+(Signature)
+HR Manager
+"""
+        
         else:
             return f"Dear {data.get('name')}, This is a formal letter regarding your {letter_type}."
 
