@@ -47,6 +47,7 @@ class AIService:
         
         Tone: Professional and Welcoming.
         Keep it concise (max 300 words).
+        IMPORTANT: If Salary is 0, '0', or 'INR 0', DO NOT include any Remuneration, Salary, or CTC section in the letter. Treat it as an Internship Offer without pay.
         """
 
     def _fallback_template(self, data, letter_type):
@@ -54,59 +55,98 @@ class AIService:
         A hardcoded premium template for Arah Infotech Pvt Ltd.
         """
         if "offer" in letter_type.lower():
-            # ... (Existing Offer Letter code) ...
+            # Check if intern (CTC is 0)
+            ctc_val = str(data.get('ctc', '0')).replace(',', '').replace('INR', '').strip()
+            try:
+                is_intern = float(ctc_val) == 0
+            except ValueError:
+                is_intern = False
+
+            remuneration_section = ""
+            if not is_intern:
+                remuneration_section = f"""
+    <div style="margin-top: 20px;">
+        <h3>1. REMUNERATION</h3>
+        <p>Your Annual Cost to Company (CTC) will be <strong>{data.get('ctc', 'INR 0,00,000')}</strong>.</p>
+        <p>The detailed breakdown is as follows (Annexure A):</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ddd;">
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">COMPONENT</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">ANNUAL AMOUNT</th>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Basic Salary</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{data.get('basic')}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">HRA</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{data.get('hra')}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Special Allowance</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{data.get('allowance')}</td>
+            </tr>
+             <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">PF (Employer)</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{data.get('pf')}</td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td style="border: 1px solid #ddd; padding: 8px;">TOTAL CTC</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{data.get('ctc')}</td>
+            </tr>
+        </table>
+    </div>
+"""
+
+            # HTML Template
             return f"""
-Arah Infotech Pvt Ltd
-123, Tech Park, Innovation City, India
-contact@arahinfotech.com | www.arahinfotech.com
-------------------------------------------------------------
+    <div style="font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; border-bottom: 2px solid #0056b3; padding-bottom: 20px; margin-bottom: 20px;">
+            <img src="/arah_logo.jpg" alt="Arah Infotech" style="max-width: 150px; height: auto; margin-bottom: 15px;" />
+            <h1 style="color: #0056b3; margin: 0;">Arah Infotech Pvt Ltd</h1>
+            <p style="margin: 5px 0; color: #666;">123, Tech Park, Innovation City, India</p>
+            <p style="margin: 0; color: #666;">contact@arahinfotech.com | www.arahinfotech.com</p>
+        </div>
 
-Date: {data.get('joining_date')}
+        <p style="text-align: right; font-weight: bold;">Date: {data.get('joining_date')}</p>
+        <p style="color: #d9534f; font-weight: bold;">Strictly Private & Confidential</p>
 
-Strictly Private & Confidential
+        <p>To,<br>
+        <strong>{data.get('name')}</strong><br>
+        {data.get('department')}</p>
 
-To,
-{data.get('name')}
-{data.get('department')}
+        <h3 style="color: #333; text-decoration: underline;">Subject: Offer of Employment</h3>
 
-Subject: Offer of Employment
+        <p>Dear <strong>{data.get('name')}</strong>,</p>
 
-Dear {data.get('name')},
+        <p>We are pleased to offer you the position of <strong>"{data.get('role')}"</strong> at Arah Infotech Pvt Ltd. We were impressed with your skills and experience during the interview process, and we believe you will be a valuable asset to our {data.get('department')} team.</p>
 
-We are pleased to offer you the position of "{data.get('role')}" at Arah Infotech Pvt Ltd. We were impressed with your skills and experience during the interview process, and we believe you will be a valuable asset to our {data.get('department')} team.
+        {remuneration_section}
 
-1. REMUNERATION
-Your Annual Cost to Company (CTC) will be {data.get('ctc', 'INR 0,00,000')}.
+        <div style="margin-top: 20px;">
+            <h3>{ "2" if not is_intern else "1" }. DATE OF JOINING</h3>
+            <p>Your scheduled date of joining will be <strong>{data.get('joining_date')}</strong>.</p>
+        </div>
 
-The detailed breakdown is as follows (Annexure A):
+        <div style="margin-top: 20px;">
+            <h3>{ "3" if not is_intern else "2" }. PROBATION PERIOD</h3>
+            <p>You will be on a probation period of 6 months from the date of joining.</p>
+        </div>
 
-----------------------------------------------------
-| COMPONENT              | ANNUAL AMOUNT           |
-----------------------------------------------------
-| Basic Salary           | {data.get('basic')} |
-| HRA                    | {data.get('hra')} |
-| Special Allowance      | {data.get('allowance')} |
-| PF (Employer)          | {data.get('pf')} |
-----------------------------------------------------
-| TOTAL CTC              | {data.get('ctc')} |
-----------------------------------------------------
+        <div style="margin-top: 20px;">
+            <h3>{ "4" if not is_intern else "3" }. TERMS & CONDITIONS</h3>
+            <p>This offer is subject to the verification of your credentials and successful completion of necessary background checks.</p>
+        </div>
 
-2. DATE OF JOINING
-Your scheduled date of joining will be {data.get('joining_date')}.
+        <p style="margin-top: 30px;">We are excited to have you onboard!</p>
 
-3. PROBATION PERIOD
-You will be on a probation period of 6 months from the date of joining.
-
-4. TERMS & CONDITIONS
-This offer is subject to the verification of your credentials and successful completion of necessary background checks.
-
-We are excited to have you onboard!
-
-For Arah Infotech Pvt Ltd,
-
-
-(Signature)
-HR Manager
+        <div style="margin-top: 50px;">
+            <p>For Arah Infotech Pvt Ltd,</p>
+            <br><br>
+            <p style="border-top: 1px solid #333; display: inline-block; padding-top: 5px; width: 200px;">Authorized Signatory</p>
+            <p><strong>HR Manager</strong></p>
+        </div>
+    </div>
 """
 
         elif "experience" in letter_type.lower():

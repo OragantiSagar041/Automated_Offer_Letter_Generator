@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
-import { generatePDFDoc } from '../utils/pdfGenerator'; // Reuse utility if possible, but keeping logic here is fine too as they are slightly different (modal has state)
+import html2canvas from 'html2canvas';
 
-const API_URL = 'https://automated-offer-letter-generator-1.onrender.com';
+const API_URL = 'http://127.0.0.1:8000';
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
@@ -37,42 +37,63 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     };
 
     const generatePDFDoc = async () => {
-        const doc = new jsPDF();
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const element = document.getElementById('letter-preview');
 
-        // 1. Add Logo
-        try {
-            const img = new Image();
-            img.src = '/arah_logo.jpg'; // Path to public folder image
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = () => resolve(); // Ignore error, just don't add logo
+        if (element && generatedContent.trim().startsWith('<')) {
+            // HTML Mode (using html2canvas)
+            // Wait for images to load if any ? Assuming placeholder
+            const canvas = await html2canvas(element, {
+                scale: 2, // High resolution
+                useCORS: true,
+                logging: false,
+                windowWidth: 1200 // Force wide render
             });
-            // Add image (X, Y, Width, Height)
-            // Adjust dimensions as needed to look good
-            doc.addImage(img, 'JPEG', 15, 10, 40, 40);
-        } catch (e) {
-            console.error("Logo Error:", e);
-        }
 
-        // 2. Add Content with Multi-Page Support
-        const splitText = doc.splitTextToSize(generatedContent, 180);
-        const pageHeight = doc.internal.pageSize.height;
-        const marginY = 20;
-        let cursorY = 60; // Start Y position (after Logo)
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdfWidth = 210; // A4 Width mm
+            const pdfHeight = 297; // A4 Height mm
 
-        doc.setFontSize(12);
-        doc.setFont("courier", "normal"); // Use Monospace for table alignment
+            const imgProps = doc.getImageProperties(imgData);
+            let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            let imgWidth = pdfWidth;
 
-        splitText.forEach(line => {
-            // Check if we need a new page
-            if (cursorY > pageHeight - marginY) {
-                doc.addPage();
-                cursorY = 20; // Reset to top of new page
+            // Scale to fit single page if too tall
+            if (imgHeight > pdfHeight) {
+                const ratio = pdfHeight / imgHeight;
+                imgWidth = pdfWidth * ratio;
+                imgHeight = pdfHeight;
             }
-            doc.text(line, 15, cursorY);
-            cursorY += 7; // Line spacing
-        });
 
+            // Center horizontally
+            const x = (pdfWidth - imgWidth) / 2;
+            doc.addImage(imgData, 'JPEG', x, 0, imgWidth, imgHeight);
+
+        } else {
+            // Text Mode (Fallback)
+            // 1. Add Logo
+            try {
+                const img = new Image();
+                img.src = '/arah_logo.jpg';
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = () => resolve();
+                });
+                doc.addImage(img, 'JPEG', 15, 10, 40, 40);
+            } catch (e) {
+                console.error("Logo Error:", e);
+            }
+
+            const splitText = doc.splitTextToSize(generatedContent, 180);
+            let cursorY = 60;
+            doc.setFontSize(12);
+            doc.setFont("courier", "normal");
+            splitText.forEach(line => {
+                if (cursorY > 280) { doc.addPage(); cursorY = 20; }
+                doc.text(line, 15, cursorY);
+                cursorY += 7;
+            });
+        }
         return doc;
     };
 
@@ -208,19 +229,27 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     </button>
                 </div>
 
-                <div style={{
+                <div id="letter-preview" style={{
                     flex: 1,
-                    background: '#f8fafc',
-                    color: '#0f172a',
+                    background: 'white', // White paper background for preview
+                    color: '#1a1d24ff',
                     padding: '2rem',
                     borderRadius: '4px',
                     overflowY: 'auto',
                     fontFamily: 'serif',
                     lineHeight: '1.6',
-                    whiteSpace: 'pre-wrap',
+                    whiteSpace: generatedContent.trim().startsWith('<') ? 'normal' : 'pre-wrap', // Reset for HTML
                     minHeight: '300px'
                 }}>
-                    {generatedContent || <em style={{ color: '#64748b' }}>Select a letter type and click Generate to see the AI draft here...</em>}
+                    {generatedContent ? (
+                        generatedContent.trim().startsWith('<') ? (
+                            <div dangerouslySetInnerHTML={{ __html: generatedContent }} />
+                        ) : (
+                            generatedContent
+                        )
+                    ) : (
+                        <em style={{ color: '#64748b' }}>Select a letter type and click Generate to see the AI draft here...</em>
+                    )}
                 </div>
 
                 {generatedContent && (

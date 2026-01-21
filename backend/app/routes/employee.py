@@ -145,4 +145,137 @@ def update_employee(employee_id: int, employee_update: schemas.EmployeeCreate, d
     
     db.commit()
     db.refresh(db_employee)
+    db.commit()
+    db.refresh(db_employee)
     return db_employee
+
+import pandas as pd
+from fastapi import UploadFile, File
+import io
+from datetime import datetime
+
+@router.post("/upload")
+async def upload_employees_bulk(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
+    """
+    Bulk Upload Employees from Excel/CSV.
+    """
+    try:
+        content = await file.read()
+        if file.filename.endswith('.xlsx'):
+            df = pd.read_excel(io.BytesIO(content))
+        elif file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        else:
+            raise HTTPException(status_code=400, detail="Invalid file format")
+        
+        # Normalize Headers
+        print("DEBUG RAW COLS:", df.columns)
+        df.columns = [str(c).lower().strip().replace(' ', '_') for c in df.columns]
+        print("DEBUG NORM COLS:", df.columns)
+        print("DEBUG HEAD:\n", df.head())
+        
+        # Helper to find column loosely
+        def find_col(aliases):
+            for alias in aliases:
+                if alias in df.columns:
+                    return alias
+            return None
+
+        success_count = 0
+        errors = []
+
+        for index, row in df.iterrows():
+            try:
+                # 1. Email (Required)
+                col_email = find_col(['email', 'email_id', 'email_address'])
+                email = row.get(col_email) if col_email else None
+                
+                if not email or pd.isna(email):
+                    errors.append(f"Row {index+2}: Email missing")
+                    continue
+
+                if db.query(models.Employee).filter(models.Employee.email == email).first():
+                    errors.append(f"Skipped {email}: Exists")
+                    continue
+
+                # 2. Name
+                col_name = find_col(['name', 'full_name', 'employee_name', 'candidate_name'])
+                name = row.get(col_name) if col_name else "Unknown"
+
+                # 3. Designation
+                col_desg = find_col(['designation', 'role', 'position', 'job_title'])
+                desg = row.get(col_desg) if col_desg else "TBD"
+
+                # 4. Department
+                col_dept = find_col(['department', 'dept', 'domain', 'team'])
+                dept = row.get(col_dept) if col_dept else "General"
+
+                # 5. Joining Date
+                col_date = find_col(['joining_date', 'date_of_joining', 'doj', 'start_date', 'joining'])
+                jd = row.get(col_date) if col_date else None
+                
+                if pd.isna(jd):
+                    j_date = datetime.now().date()
+                else:
+                    try:
+                        j_date = pd.to_datetime(jd).date()
+                    except:
+                        j_date = datetime.now().date()
+
+                # 6. ID
+                col_id = find_col(['emp_id', 'employee_id', 'id'])
+                emp_id = row.get(col_id) if col_id else None
+                
+                if not emp_id or pd.isna(emp_id):
+                    max_id = db.query(models.Employee.id).order_by(models.Employee.id.desc()).first()
+                    next_seq = (max_id[0] + 1) if max_id else 1
+                    emp_id = f"EMP{next_seq:03d}"
+
+                # 7. CTC
+                col_ctc = find_col(['ctc', 'salary', 'annual_ctc', 'package'])
+                ctc_val = row.get(col_ctc) if col_ctc else 0
+                ctc = float(ctc_val) if not pd.isna(ctc_val) else 0
+
+                new_emp = models.Employee(
+                    emp_id=str(emp_id),
+                    name=name,
+                    email=email,
+                    designation=desg,
+                    department=dept,
+                    joining_date=j_date,
+                    location=row.get('location', 'Remote')
+                )
+                
+                db.add(new_emp)
+                db.flush()
+
+                # Payroll Logic
+                basic = ctc * 0.5
+                hra = basic * 0.5
+                pf = basic * 0.12
+                pt = 2400
+                special = ctc - (basic + hra + pf)
+                if special < 0: special = 0
+                
+                new_payroll = models.Payroll(
+                    emp_id=new_emp.id,
+                    basic_salary=round(basic, 2),
+                    hra=round(hra, 2),
+                    allowances=round(special, 2),
+                    deductions=round(pf + pt, 2),
+                    net_salary=ctc,
+                    month="Joining",
+                    year=2026
+                )
+                db.add(new_payroll)
+                db.commit() # Commit this row
+                success_count += 1
+
+            except Exception as e:
+                db.rollback() 
+                errors.append(f"Row {index+2}: {str(e)}")
+        
+        return {"status": "success", "imported_count": success_count, "errors": errors}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

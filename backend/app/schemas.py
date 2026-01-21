@@ -4,13 +4,13 @@ from typing import Optional, List
 
 # Employee Schemas
 class EmployeeBase(BaseModel):
-    emp_id: str
-    name: str
+    emp_id: Optional[str] = None
+    name: Optional[str] = None
     email: str
-    designation: str
-    department: str
-    joining_date: date
-    location: str
+    designation: Optional[str] = None
+    department: Optional[str] = None
+    joining_date: Optional[date] = None
+    location: Optional[str] = "Remote"
 
 class EmployeeCreate(EmployeeBase):
     ctc: float

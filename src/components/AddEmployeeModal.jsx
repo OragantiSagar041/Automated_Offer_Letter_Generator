@@ -9,6 +9,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
         emp_id: '',
         name: '',
         email: '',
+        employment_type: 'Full Time',
         designation: '',
         department: '',
         joining_date: '',
@@ -18,16 +19,26 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        let { name, value } = e.target;
+
+        // Custom validation for Date: Clear if value exceeds standard YYYY-MM-DD length (10 chars)
+        if (name === 'joining_date' && value.length > 10) {
+            value = ''; // Reset to blank if year becomes too long (e.g. 5 digits)
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Ensure basic_salary is a number (send 0 if empty, backend ignores it anyway or recalculates)
+
+        const isIntern = formData.employment_type === 'Internship';
+
         const payload = {
             ...formData,
-            basic_salary: formData.basic_salary ? parseFloat(formData.basic_salary) : 0,
-            ctc: parseFloat(formData.ctc) // Ensure CTC is number too
+            // If Internship, set salary fields to 0
+            basic_salary: isIntern ? 0 : (formData.basic_salary ? parseFloat(formData.basic_salary) : 0),
+            ctc: isIntern ? 0 : (formData.ctc ? parseFloat(formData.ctc) : 0)
         };
         onSave(payload);
     };
@@ -69,7 +80,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         </div>
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Joining Date</label>
-                            <input required type="date" name="joining_date" value={formData.joining_date} onChange={handleChange}
+                            <input required type="date" name="joining_date" maxLength={10} value={formData.joining_date} onChange={handleChange}
                                 style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
                         </div>
                     </div>
@@ -99,25 +110,39 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         </div>
                     </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Location</label>
-                        <input required name="location" placeholder="New York, Remote" value={formData.location} onChange={handleChange}
-                            style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                    </div>
-
-                    <h3 style={{ margin: '1rem 0 0.5rem', color: '#646cff', fontSize: '1.5rem' }}>Payroll Details</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Annual CTC</label>
-                            <input required type="number" name="ctc" placeholder="1200000" value={formData.ctc} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
+                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Employment Type</label>
+                            <select name="employment_type" value={formData.employment_type} onChange={handleChange}
+                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }}>
+                                <option value="Full Time">Full Time</option>
+                                <option value="Internship">Internship</option>
+                            </select>
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Basic Salary (Optional)</label>
-                            <input type="number" name="basic_salary" placeholder="Auto-calculated if empty" value={formData.basic_salary} onChange={handleChange}
+                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Location</label>
+                            <input required name="location" placeholder="New York, Remote" value={formData.location} onChange={handleChange}
                                 style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
                         </div>
                     </div>
+
+                    {formData.employment_type === 'Full Time' && (
+                        <>
+                            <h3 style={{ margin: '1rem 0 0.5rem', color: '#646cff', fontSize: '1.5rem' }}>Payroll Details</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Annual CTC</label>
+                                    <input required type="number" name="ctc" placeholder="1200000" value={formData.ctc} onChange={handleChange}
+                                        style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Basic Salary (Optional)</label>
+                                    <input type="number" name="basic_salary" placeholder="Auto-calculated if empty" value={formData.basic_salary} onChange={handleChange}
+                                        style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <div style={{ display: 'flex', gap: '1.5rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
                         <button type="button" onClick={onClose} style={{

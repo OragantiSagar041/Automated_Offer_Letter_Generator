@@ -4,8 +4,8 @@ import LetterModal from './components/LetterModal';
 import { generatePDFDoc } from './utils/pdfGenerator';
 import jsPDF from 'jspdf';
 
-// Hardcoded API URL to fix Vercel Env Issue
-const API_URL = 'https://automated-offer-letter-generator-1.onrender.com';
+// Local Development API URL
+const API_URL = 'http://127.0.0.1:8000';
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -20,8 +20,10 @@ function App() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBulkSending, setIsBulkSending] = useState(false);
   const [bulkProgress, setBulkProgress] = useState("");
+  const [importMsg, setImportMsg] = useState(null); // Result message
 
   const fetchEmployees = () => {
+    // ... (existing)
     setLoading(true);
     fetch(`${API_URL}/employees/`)
       .then(res => res.json())
@@ -34,6 +36,8 @@ function App() {
         setLoading(false);
       });
   };
+  // ...
+
 
   useEffect(() => {
     fetchEmployees();
@@ -168,9 +172,13 @@ function App() {
 
   // --- Derived State for Stats & Search ---
   const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const name = emp.name || "";
+    const designation = emp.designation || "";
+    const department = emp.department || "";
+
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      department.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === 'All' ? true : emp.status === filterStatus;
 
@@ -210,7 +218,7 @@ function App() {
           alt="Arah Infotech Logo"
           style={{ height: '120px', marginBottom: '1.5rem', borderRadius: '12px' }}
         />
-        <h1 style={{ fontSize: '4rem', marginBottom: '0.8rem', fontWeight: 800 }}>Arah Infotech - Admin Portal</h1>
+        <h1 style={{ fontSize: '4rem', marginBottom: '0.8rem', fontWeight: 800 }}>Arah Infotech - Admin Portal (v2)</h1>
         <p style={{ color: '#94a3b8', fontSize: '1.4rem', letterSpacing: '1px' }}>ENTERPRISE OFFER MANAGEMENT & PAYROLL AUTOMATION</p>
       </header>
 
@@ -257,8 +265,8 @@ function App() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0 }}>Employee Directory</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '2.5rem', margin: 0, textAlign: 'center' }}>Employee Directory</h2>
 
             {/* BULK ACTION BUTTON */}
             {selectedIds.size > 0 && (
@@ -275,7 +283,7 @@ function App() {
               </button>
             )}
 
-            <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
               <input
                 type="text"
                 placeholder="🔍 Search by name, role..."
@@ -310,7 +318,64 @@ function App() {
               >
                 + Add Employee
               </button>
+
+              <input
+                type="file"
+                id="importInput"
+                style={{ display: 'none' }}
+                accept=".csv, .xlsx"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  setImportMsg("Uploading " + file.name + "...");
+
+                  try {
+                    const res = await fetch(`${API_URL}/employees/upload`, {
+                      method: 'POST',
+                      body: formData
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      if (data.errors.length > 0) {
+                        setImportMsg(`⚠️ Partial/Failed Import:\nAdded: ${data.imported_count}\n\nFAILED ROWS:\n${data.errors.length > 15 ? data.errors.slice(0, 15).join('\n') + '\n...' : data.errors.join('\n')}`);
+                      } else {
+                        setImportMsg(`✅ Success! Added: ${data.imported_count} employees.`);
+                      }
+                      fetchEmployees();
+                    } else {
+                      setImportMsg(`❌ Failed: ${data.detail}`);
+                    }
+                  } catch (err) {
+                    setImportMsg(`❌ Net Error: ${err.message}`);
+                  }
+                  e.target.value = null; // Reset
+                }}
+              />
+              <button
+                onClick={() => document.getElementById('importInput').click()}
+                style={{
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px 28px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                📁 Import Excel
+              </button>
             </div>
+            {importMsg && (
+              <div style={{ width: '100%', textAlign: 'center', padding: '10px', background: '#334155', borderRadius: '8px', color: '#facc15', marginTop: '10px', whiteSpace: 'pre-wrap' }}>
+                {importMsg}
+              </div>
+            )}
           </div>
         </div>
 
@@ -421,28 +486,32 @@ function App() {
         )}
       </div>
 
-      {isModalOpen && (
-        <AddEmployeeModal
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedEmployeeForEdit(null);
-          }}
-          onSave={handleSaveEmployee}
-          initialData={selectedEmployeeForEdit}
-        />
-      )}
+      {
+        isModalOpen && (
+          <AddEmployeeModal
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedEmployeeForEdit(null);
+            }}
+            onSave={handleSaveEmployee}
+            initialData={selectedEmployeeForEdit}
+          />
+        )
+      }
 
-      {selectedEmployee && (
-        <LetterModal
-          employee={selectedEmployee}
-          onClose={() => setSelectedEmployee(null)}
-          onSuccess={() => {
-            setSelectedEmployee(null); // Close modal
-            fetchEmployees(); // Refresh list to show new badge
-          }}
-        />
-      )}
-    </div>
+      {
+        selectedEmployee && (
+          <LetterModal
+            employee={selectedEmployee}
+            onClose={() => setSelectedEmployee(null)}
+            onSuccess={() => {
+              setSelectedEmployee(null); // Close modal
+              fetchEmployees(); // Refresh list to show new badge
+            }}
+          />
+        )
+      }
+    </div >
   );
 }
 
