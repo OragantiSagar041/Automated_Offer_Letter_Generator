@@ -3,7 +3,9 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8000'
+    : 'https://automated-offer-letter-generator.onrender.com';
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
@@ -110,76 +112,6 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             zIndex: 1000
         }}>
             {/* ... render ... */}
-            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '2.5rem', justifyContent: 'flex-end', borderTop: '1px solid #334155', paddingTop: '2rem' }}>
-                <button
-                    onClick={handleDownloadPDF}
-                    style={{
-                        background: '#0f172a',
-                        border: '2px solid #646cff',
-                        color: '#646cff',
-                        padding: '16px 32px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '1.1rem',
-                        fontWeight: 600
-                    }}
-                >
-                    ⬇️ Download PDF
-                </button>
-
-                <button
-                    onClick={async () => {
-                        const btn = document.getElementById('emailBtn');
-                        btn.innerText = 'Generating PDF...';
-
-                        try {
-                            // 1. Generate PDF with Logo
-                            const doc = await generatePDFDoc();
-                            const pdfBase64 = doc.output('datauristring');
-
-                            btn.innerText = 'Sending Email...';
-
-                            // 2. Send to Backend
-                            const res = await fetch('http://127.0.0.1:8000/email/send', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    employee_id: employee.id,
-                                    letter_content: generatedContent,
-                                    pdf_base64: pdfBase64,
-                                    custom_message: emailBody
-                                })
-                            });
-
-                            const data = await res.json();
-                            if (data.status === 'error') throw new Error(data.message);
-
-                            alert("Email Sent Successfully! 🚀");
-                            btn.innerText = 'Sent ✅';
-                            if (onSuccess) onSuccess();
-
-                        } catch (err) {
-                            console.error(err);
-                            alert("Failed: " + err.message);
-                            btn.innerText = 'Retry ❌';
-                        }
-                    }}
-                    id="emailBtn"
-                    style={{
-                        background: '#646cff',
-                        color: 'white',
-                        border: 'none',
-                        padding: '16px 32px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '1.1rem',
-                        fontWeight: 600
-                    }}
-                >
-                    ✉️ Send to Candidate
-                </button>
-            </div>
-            {/* ... */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

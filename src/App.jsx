@@ -5,7 +5,10 @@ import { generatePDFDoc } from './utils/pdfGenerator';
 import jsPDF from 'jspdf';
 
 // Local Development API URL
-const API_URL = 'http://127.0.0.1:8000';
+// API URL (Automatic Detection)
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8000'
+  : 'https://automated-offer-letter-generator.onrender.com';
 
 function App() {
   const [employees, setEmployees] = useState([]);
