@@ -45,6 +45,10 @@ def generate_letter(request: schemas.LetterRequest, db: Session = Depends(databa
             "ctc": "TBD"
         }
     
+    # Add Current Date for the Letter Header
+    from datetime import date
+    data_context["current_date"] = date.today().strftime('%Y-%m-%d')
+
     # 4. Call AI Service
     generated_text = ai_engine.generate_letter(data_context, request.letter_type)
     

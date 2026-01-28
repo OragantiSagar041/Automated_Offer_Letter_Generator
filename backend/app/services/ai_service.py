@@ -43,6 +43,7 @@ class AIService:
         Role: {data.get('role')}
         Department: {data.get('department')}
         Joining Date: {data.get('joining_date')}
+        Date of Letter: {data.get('current_date')}
         Salary: {data.get('ctc')}
         
         Tone: Professional and Welcoming.
@@ -108,7 +109,7 @@ class AIService:
             <p style="margin: 0; color: #666;">contact@arahinfotech.com | www.arahinfotech.com</p>
         </div>
 
-        <p style="text-align: right; font-weight: bold;">Date: {data.get('joining_date')}</p>
+        <p style="text-align: right; font-weight: bold;">Date: {data.get('current_date')}</p>
         <p style="color: #d9534f; font-weight: bold;">Strictly Private & Confidential</p>
 
         <p>To,<br>
@@ -153,7 +154,7 @@ class AIService:
             return f"""
 TO WHOM IT MAY CONCERN
 
-Date: {data.get('today', '2026-01-19')}
+Date: {data.get('current_date', '2026-01-19')}
 
 This is to certify that Mr./Ms. {data.get('name')} was employed with Arah Infotech Pvt Ltd as "{data.get('role')}" in the {data.get('department')} Department.
 
@@ -174,7 +175,7 @@ HR Manager
             return f"""
 RELIEVING LETTER
 
-Date: {data.get('today', '2026-01-19')}
+Date: {data.get('current_date', '2026-01-19')}
 
 To,
 {data.get('name')}
@@ -201,7 +202,7 @@ HR Manager
             return f"""
 APPRAISAL LETTER
 
-Date: {data.get('today', '2026-01-19')}
+Date: {data.get('current_date', '2026-01-19')}
 
 To,
 {data.get('name')}
