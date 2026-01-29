@@ -37,6 +37,17 @@ class AIService:
             return self._fallback_template(employee_data, letter_type)
 
     def _build_prompt(self, data, letter_type):
+        role = data.get('role', '').lower()
+        is_internor_trainee = "intern" in role or "trainee" in role
+        
+        length_instruction = (
+            "Keep the letter extremely concise and ensure it fits on a single page. Remove unnecessary fluff. " 
+            "Focus strictly on Role, Joining Date, and Terms."
+            if is_internor_trainee 
+            else 
+            "Write a detailed and professional letter. It can be lengthy and comprehensive."
+        )
+
         return f"""
         Act as a professional HR Manager. Write a {letter_type} letter for:
         Name: {data.get('name')}
@@ -47,7 +58,8 @@ class AIService:
         Salary: {data.get('ctc')}
         
         Tone: Professional and Welcoming.
-        Keep it concise (max 300 words).
+        {length_instruction}
+        
         IMPORTANT: If Salary is 0, '0', or 'INR 0', DO NOT include any Remuneration, Salary, or CTC section in the letter. Treat it as an Internship Offer without pay.
         """
 
@@ -109,7 +121,9 @@ class AIService:
             <p style="margin: 0; color: #666;">contact@arahinfotech.com | www.arahinfotech.com</p>
         </div>
 
-        <p style="text-align: right; font-weight: bold;">Date: {data.get('current_date')}</p>
+        <div class="date-row" style="text-align: right; font-weight: bold; margin-bottom: 20px;">
+            <span>Date: {data.get('current_date')}</span>
+        </div>
         <p style="color: #d9534f; font-weight: bold;">Strictly Private & Confidential</p>
 
         <p>To,<br>
@@ -124,28 +138,32 @@ class AIService:
 
         {remuneration_section}
 
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 10px;">
             <h3>{ "2" if not is_intern else "1" }. DATE OF JOINING</h3>
             <p>Your scheduled date of joining will be <strong>{data.get('joining_date')}</strong>.</p>
         </div>
 
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 10px;">
             <h3>{ "3" if not is_intern else "2" }. PROBATION PERIOD</h3>
             <p>You will be on a probation period of 6 months from the date of joining.</p>
         </div>
 
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 10px;">
             <h3>{ "4" if not is_intern else "3" }. TERMS & CONDITIONS</h3>
             <p>This offer is subject to the verification of your credentials and successful completion of necessary background checks.</p>
         </div>
 
-        <p style="margin-top: 30px;">We are excited to have you onboard!</p>
+        <p style="margin-top: 15px;">We are excited to have you onboard!</p>
 
-        <div style="margin-top: 50px;">
-            <p>For Arah Infotech Pvt Ltd,</p>
-            <br><br>
-            <p style="border-top: 1px solid #333; display: inline-block; padding-top: 5px; width: 200px;">Authorized Signatory</p>
-            <p><strong>HR Manager</strong></p>
+        <div class="signature-block" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="text-align: left;">
+                <p>For Arah Infotech Pvt Ltd,</p>
+            </div>
+            
+            <div style="text-align: left; width: 200px;">
+                <p style="border-top: 1px solid #333; padding-top: 5px; margin: 0;">Authorized Signatory</p>
+                <p style="font-weight: bold; margin: 5px 0 0 0;">HR Manager</p>
+            </div>
         </div>
     </div>
 """

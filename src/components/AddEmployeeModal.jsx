@@ -2,20 +2,32 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
-    const [formData, setFormData] = useState(initialData ? {
-        ...initialData,
-        basic_salary: initialData.basic_salary || (initialData.ctc ? (initialData.ctc * 0.5) : '')
-    } : {
-        emp_id: '',
-        name: '',
-        email: '',
-        employment_type: 'Full Time',
-        designation: '',
-        department: '',
-        joining_date: '',
-        location: '',
-        ctc: '',
-        basic_salary: ''
+    const [formData, setFormData] = useState(() => {
+        if (initialData) {
+            // Smart Detection for Internship
+            // specific check: if employment_type OR designation contains "intern" (case-insensitive)
+            const typeLower = (initialData.employment_type || '').toLowerCase();
+            const roleLower = (initialData.designation || '').toLowerCase();
+            const isIntern = typeLower.includes('intern') || roleLower.includes('intern');
+
+            return {
+                ...initialData,
+                employment_type: isIntern ? 'Internship' : 'Full Time',
+                basic_salary: initialData.basic_salary || (initialData.ctc ? (initialData.ctc * 0.5) : '')
+            };
+        }
+        return {
+            emp_id: '',
+            name: '',
+            email: '',
+            employment_type: 'Full Time',
+            designation: '',
+            department: '',
+            joining_date: '',
+            location: '',
+            ctc: '',
+            basic_salary: ''
+        };
     });
 
     const handleChange = (e) => {
