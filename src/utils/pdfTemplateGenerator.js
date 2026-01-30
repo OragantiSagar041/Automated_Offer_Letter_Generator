@@ -110,50 +110,146 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         document.body.removeChild(container);
         const contentPdfBytes = contentPdfDoc.output('arraybuffer');
 
-        // 2. Load Template PDF
-        const templatePdfBytes = await fetch(templateUrl).then(res => res.arrayBuffer());
-        const templateDoc = await PDFDocument.load(templatePdfBytes);
+        // 2. Identify Template Type
+        const isImage = templateUrl.toLowerCase().endsWith('.jpg') ||
+            templateUrl.toLowerCase().endsWith('.jpeg') ||
+            templateUrl.toLowerCase().endsWith('.png');
 
-        // 3. Load Content PDF
-        const contentDoc = await PDFDocument.load(contentPdfBytes);
+        if (isImage) {
+            // --- IMAGE STRATEGY (Best for robustness) ---
+            console.log("Using Image Template Strategy");
+            const finalDoc = await PDFDocument.create();
+            const imgRes = await fetch(`${templateUrl}?t=${Date.now()}`);
 
-        // 4. Create Final PDF
-        const finalDoc = await PDFDocument.create();
+            // Check if file exists (Vite might return 200 OK with index.html for missing files)
+            const contentType = imgRes.headers.get('content-type');
+            if (!imgRes.ok || (contentType && contentType.includes('text/html'))) {
+                throw new Error(`Template image MISSING: ${templateUrl} was not found. Please ensure you have converted the PDF to '${templateUrl}' and placed it in the 'public' folder.`);
+            }
 
-        const contentPages = contentDoc.getPages();
+            const imageBytes = await imgRes.arrayBuffer();
 
-        for (let i = 0; i < contentPages.length; i++) {
-            // Copy Template Page (Background) - Always use Page 1 of template
-            const [templatePage] = await finalDoc.copyPages(templateDoc, [0]);
-            const finalPage = finalDoc.addPage(templatePage); // This adds the template as the base
+            // Check for PDF renamed as JPG (Magic number %PDF is 0x25 0x50 0x44 0x46)
+            const header = new Uint8Array(imageBytes.slice(0, 4));
+            if (header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46) {
+                throw new Error(`Invalid Image Format: The file '${templateUrl}' appears to be a PDF renamed to JPG. Please convert it using a real online converter.`);
+            }
 
-            // Copy Content Page (Foreground)
-            const [contentPage] = await finalDoc.copyPages(contentDoc, [i]);
+            let embeddedImage;
+            if (templateUrl.toLowerCase().endsWith('.png')) {
+                embeddedImage = await finalDoc.embedPng(imageBytes);
+            } else {
+                // Try embedJpg, but handle error if it's actually PNG renamed to JPG
+                try {
+                    embeddedImage = await finalDoc.embedJpg(imageBytes);
+                } catch (e) {
+                    // Last ditch attempt: maybe it IS a png?
+                    try {
+                        embeddedImage = await finalDoc.embedPng(imageBytes);
+                    } catch (e2) {
+                        throw new Error(`Could not parse image '${templateUrl}'. It must be a valid JPG or PNG.`);
+                    }
+                }
+            }
 
-            // Embed the Content Page onto the Template Page
-            // We need to embed it to draw it on top
-            const embeddedPage = await finalDoc.embedPage(contentPage);
+            const A4_WIDTH = 595.28;
+            const A4_HEIGHT = 841.89;
 
-            finalPage.drawPage(embeddedPage, {
-                x: 0,
-                y: 0,
-                width: finalPage.getWidth(),
-                height: finalPage.getHeight(),
-                opacity: 1, // Ensure content is visible
-                blendMode: 'Multiply' // Try to make white background transparent?
-            });
-            // Note: Standard PDF pages have white backgrounds. 
-            // Embedding a white-background page on top of the template will cover the template.
-            // We need to rely on 'Multiply' blend mode to make the white transparent!
+            // Loop through content pages (usually 1)
+            // Re-load content doc into this new context
+            const contentDocForEmbed = await PDFDocument.load(contentPdfBytes);
+            const embeddedContent = await finalDoc.embedPdf(contentDocForEmbed);
+
+            const pageCount = Math.max(1, embeddedContent.length);
+
+            for (let i = 0; i < pageCount; i++) {
+                const finalPage = finalDoc.addPage([A4_WIDTH, A4_HEIGHT]);
+
+                // Draw Background Image (Stretch to fit A4)
+                finalPage.drawImage(embeddedImage, {
+                    x: 0,
+                    y: 0,
+                    width: A4_WIDTH,
+                    height: A4_HEIGHT,
+                });
+
+                // Draw Text Overlay
+                if (embeddedContent[i]) {
+                    finalPage.drawPage(embeddedContent[i], {
+                        x: 0,
+                        y: 0,
+                        width: A4_WIDTH,
+                        height: A4_HEIGHT,
+                        blendMode: 'Normal' // Normal works best for Image backgrounds
+                    });
+                }
+            }
+
+            const pdfBytes = await finalDoc.save();
+            const bytes = new Uint8Array(pdfBytes);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return 'data:application/pdf;base64,' + window.btoa(binary);
+
+        } else {
+            // --- EXISTING PDF STRATEGY ---
+            // Load Template PDF (Base)
+            console.log(`Fetching template: ${templateUrl}`);
+            const templateRes = await fetch(`${templateUrl}?t=${Date.now()}`);
+            if (!templateRes.ok) {
+                throw new Error(`Template PDF not found: ${templateUrl}`);
+            }
+            const templatePdfBytes = await templateRes.arrayBuffer();
+
+            // METHOD: Direct Load (Preserves original PDF structure safely)
+            const finalDoc = await PDFDocument.load(templatePdfBytes);
+            console.log("Template Loaded. Pages:", finalDoc.getPageCount());
+
+            // Embed the *Content* into the *Template*
+            // Use a fresh load of content to be safe
+            const contentDocOverlay = await PDFDocument.load(contentPdfBytes);
+            const embeddedContentPagesInTemplate = await finalDoc.embedPdf(contentDocOverlay);
+            const contentPageCount = contentDocOverlay.getPageCount();
+
+            // Ensure we have enough pages in the template
+            while (finalDoc.getPageCount() < contentPageCount) {
+                const [duplicatePage] = await finalDoc.copyPages(finalDoc, [0]);
+                finalDoc.addPage(duplicatePage);
+            }
+
+            // Draw Content on each page
+            const pages = finalDoc.getPages();
+            for (let i = 0; i < contentPageCount; i++) {
+                const finalPage = pages[i];
+                const { width, height } = finalPage.getSize();
+
+                if (embeddedContentPagesInTemplate[i]) {
+                    finalPage.drawPage(embeddedContentPagesInTemplate[i], {
+                        x: 0,
+                        y: 0,
+                        width: width,   // Adapt to strictly match existing page size
+                        height: height, // Adapt to strictly match existing page size
+                        opacity: 1,
+                        blendMode: 'Darken' // Ensures text remains visible even if background is white
+                    });
+                }
+            }
+
+            // Remove unused pages if template had more pages than content
+            while (finalDoc.getPageCount() > contentPageCount) {
+                finalDoc.removePage(finalDoc.getPageCount() - 1);
+            }
+
+            const pdfBytes = await finalDoc.save();
+            const bytes = new Uint8Array(pdfBytes);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return 'data:application/pdf;base64,' + window.btoa(binary);
         }
-
-        const pdfBytes = await finalDoc.save();
-        const bytes = new Uint8Array(pdfBytes);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return 'data:application/pdf;base64,' + window.btoa(binary);
 
     } catch (err) {
         console.error("PDF Template Error:", err);

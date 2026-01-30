@@ -38,6 +38,7 @@ class AIService:
 
     def _build_prompt(self, data, letter_type):
         role = data.get('role', '').lower()
+        company = data.get('company_name', 'Arah Infotech Pvt Ltd')
         is_internor_trainee = "intern" in role or "trainee" in role
         
         length_instruction = (
@@ -49,24 +50,28 @@ class AIService:
         )
 
         return f"""
-        Act as a professional HR Manager. Write a {letter_type} letter for:
+        Act as a professional HR Manager for {company}. Write a {letter_type} letter for:
         Name: {data.get('name')}
         Role: {data.get('role')}
         Department: {data.get('department')}
         Joining Date: {data.get('joining_date')}
         Date of Letter: {data.get('current_date')}
         Salary: {data.get('ctc')}
+        Company: {company}
         
         Tone: Professional and Welcoming.
         {length_instruction}
         
-        IMPORTANT: If Salary is 0, '0', or 'INR 0', DO NOT include any Remuneration, Salary, or CTC section in the letter. Treat it as an Internship Offer without pay.
+        IMPORTANT: Use the company name '{company}' in the header and body.
+        If Salary is 0, '0', or 'INR 0', DO NOT include any Remuneration, Salary, or CTC section in the letter. Treat it as an Internship Offer without pay.
         """
 
     def _fallback_template(self, data, letter_type):
         """
-        A hardcoded premium template for Arah Infotech Pvt Ltd.
+        A hardcoded premium template.
         """
+        company = data.get('company_name', 'Arah Infotech Pvt Ltd')
+        
         if "offer" in letter_type.lower():
             # Check if intern (CTC is 0)
             ctc_val = str(data.get('ctc', '0')).replace(',', '').replace('INR', '').strip()
@@ -115,10 +120,9 @@ class AIService:
             return f"""
     <div style="font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto;">
         <div style="text-align: center; border-bottom: 2px solid #0056b3; padding-bottom: 20px; margin-bottom: 20px;">
-            <img src="/arah_logo.jpg" alt="Arah Infotech" style="max-width: 150px; height: auto; margin-bottom: 15px;" />
-            <h1 style="color: #0056b3; margin: 0;">Arah Infotech Pvt Ltd</h1>
+            <h1 style="color: #0056b3; margin: 0;">{company}</h1>
             <p style="margin: 5px 0; color: #666;">123, Tech Park, Innovation City, India</p>
-            <p style="margin: 0; color: #666;">contact@arahinfotech.com | www.arahinfotech.com</p>
+            <p style="margin: 0; color: #666;">contact@company.com</p>
         </div>
 
         <div class="date-row" style="text-align: right; font-weight: bold; margin-bottom: 20px;">
@@ -134,7 +138,7 @@ class AIService:
 
         <p>Dear <strong>{data.get('name')}</strong>,</p>
 
-        <p>We are pleased to offer you the position of <strong>"{data.get('role')}"</strong> at Arah Infotech Pvt Ltd. We were impressed with your skills and experience during the interview process, and we believe you will be a valuable asset to our {data.get('department')} team.</p>
+        <p>We are pleased to offer you the position of <strong>"{data.get('role')}"</strong> at {company}. We were impressed with your skills and experience during the interview process, and we believe you will be a valuable asset to our {data.get('department')} team.</p>
 
         {remuneration_section}
 
@@ -157,7 +161,7 @@ class AIService:
 
         <div class="signature-block" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
             <div style="text-align: left;">
-                <p>For Arah Infotech Pvt Ltd,</p>
+                <p>For {company},</p>
             </div>
             
             <div style="text-align: left; width: 200px;">
@@ -174,7 +178,7 @@ TO WHOM IT MAY CONCERN
 
 Date: {data.get('current_date', '2026-01-19')}
 
-This is to certify that Mr./Ms. {data.get('name')} was employed with Arah Infotech Pvt Ltd as "{data.get('role')}" in the {data.get('department')} Department.
+This is to certify that Mr./Ms. {data.get('name')} was employed with {company} as "{data.get('role')}" in the {data.get('department')} Department.
 
 Tenure: {data.get('joining_date')} to Present
 
@@ -182,7 +186,7 @@ During their tenure with us, we found them to be sincere, hardworking, and dedic
 
 We wish them all the best in their future endeavors.
 
-For Arah Infotech Pvt Ltd,
+For {company},
 
 
 (Signature)
@@ -203,13 +207,13 @@ Subject: Relieving from duties
 
 Dear {data.get('name')},
 
-This has reference to your resignation letter. We would like to inform you that your resignation has been accepted, and you are relieved from your duties at Arah Infotech Pvt Ltd effective from closing hours of today.
+This has reference to your resignation letter. We would like to inform you that your resignation has been accepted, and you are relieved from your duties at {company} effective from closing hours of today.
 
 We certify that you have no pending dues or company assets.
 
 We wish you success in your future career.
 
-For Arah Infotech Pvt Ltd,
+For {company},
 
 
 (Signature)
@@ -230,14 +234,14 @@ Subject: Performance Appraisal & Salary Revision
 
 Dear {data.get('name')},
 
-In recognition of your performance and contribution to Arah Infotech Pvt Ltd during the last year, the management is pleased to revise your remuneration.
+In recognition of your performance and contribution to {company} during the last year, the management is pleased to revise your remuneration.
 
 Revised Designation: {data.get('role')} (Senior Grade)
 Revised CTC: {data.get('ctc')} (Effective from next month)
 
 We look forward to your continued contribution and wish you a successful career with us.
 
-For Arah Infotech Pvt Ltd,
+For {company},
 
 
 (Signature)

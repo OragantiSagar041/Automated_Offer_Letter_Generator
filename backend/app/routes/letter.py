@@ -34,7 +34,8 @@ def generate_letter(request: schemas.LetterRequest, db: Session = Depends(databa
             "hra": fmt(payroll.hra),
             "allowance": fmt(payroll.allowances),
             "deductions": fmt(payroll.deductions),
-            "pf": fmt(payroll.basic_salary * 0.12) # Approximation for display
+            "pf": fmt(payroll.basic_salary * 0.12), # Approximation for display
+            "company_name": request.company_name
         }
     else:
         data_context = {
@@ -42,7 +43,8 @@ def generate_letter(request: schemas.LetterRequest, db: Session = Depends(databa
             "role": employee.designation,
             "department": employee.department,
             "joining_date": str(employee.joining_date),
-            "ctc": "TBD"
+            "ctc": "TBD",
+            "company_name": request.company_name
         }
     
     # Add Current Date for the Letter Header

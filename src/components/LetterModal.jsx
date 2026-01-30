@@ -6,6 +6,13 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://127.0.0.1:8000'
     : 'https://automated-offer-letter-generator.onrender.com';
 
+const COMPANY_NAMES = {
+    '/Arah_Template.pdf': 'Arah Infotech Pvt Ltd',
+    '/UPlife.pdf': 'UP LIFE INDIA PVT LTD',
+    '/Vagerious.pdf': 'VAGARIOUS SOLUTIONS PVT LTD',
+    '/Zero7_A4.jpg': 'ZERO7 TECHNOLOGIES TRAINING & DEVELOPMENT'
+};
+
 const EditableContent = ({ initialContent, onChange }) => {
     const editorRef = React.useRef(null);
 
@@ -47,13 +54,21 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [viewMode, setViewMode] = useState('pdf'); // 'pdf' or 'edit'
 
+    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
+
     // PDF State
     const [pdfUrl, setPdfUrl] = useState(null); // Data URI for Iframe
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-    const [emailBody, setEmailBody] = useState(
-        `Dear ${employee.name},\n\nWe are pleased to offer you the position at Arah Infotech Pvt Ltd.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
-    );
+    const [emailBody, setEmailBody] = useState("");
+
+    // Update Email Body when Template/Company Changes
+    useEffect(() => {
+        const company = COMPANY_NAMES[selectedTemplate] || 'Arah Infotech Pvt Ltd';
+        setEmailBody(
+            `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${company}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
+        );
+    }, [selectedTemplate, employee.name]);
 
     // Auto-Generate on Mount
     useEffect(() => {
@@ -61,8 +76,13 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         // Let's NOT auto-call AI to save cost/time, user clicks Generate.
     }, []);
 
-    // Regenerate PDF whenever content changes (debounced?) 
-    // For now, explicit generate.
+    // Regenerate PDF when Template changes (if content exists)
+    useEffect(() => {
+        if (generatedContent && viewMode === 'pdf') {
+            generatePreview(generatedContent);
+        }
+    }, [selectedTemplate]);
+
 
     const handleGenerate = () => {
         setLoading(true);
@@ -74,7 +94,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             body: JSON.stringify({
                 employee_id: employee.id,
                 letter_type: letterType,
-                tone: "Professional"
+                tone: "Professional",
+                company_name: COMPANY_NAMES[selectedTemplate] || "Arah Infotech Pvt Ltd"
             })
         })
             .then(res => res.json())
@@ -99,7 +120,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             // This Regex removes the first centered div which usually contains the logo
             const contentWithoutHeader = htmlContent.replace(/<div style="text-align: center; border-bottom: 2px solid #0056b3;[\s\S]*?<\/div>/i, '');
 
-            const dataUri = await generatePdfWithTemplate(contentWithoutHeader);
+            // Use current state for template
+            const dataUri = await generatePdfWithTemplate(contentWithoutHeader, selectedTemplate);
             setPdfUrl(dataUri);
         } catch (e) {
             console.error(e);
@@ -141,7 +163,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     letter_content: generatedContent, // Valid for archiving text
                     pdf_base64: pdfUrl,
                     custom_message: emailBody,
-                    subject: subject
+                    subject: subject,
+                    company_name: COMPANY_NAMES[selectedTemplate] || "Arah Infotech Pvt Ltd"
                 })
             });
 
@@ -205,6 +228,20 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         <option>Appraisal Letter</option>
                         <option>Experience Letter</option>
                         <option>Relieving Letter</option>
+                    </select>
+
+                    <select
+                        value={selectedTemplate}
+                        onChange={(e) => setSelectedTemplate(e.target.value)}
+                        style={{
+                            padding: '12px 20px', borderRadius: '8px', background: '#1e293b',
+                            color: 'white', border: '1px solid #475569', flex: 1, fontSize: '1rem'
+                        }}
+                    >
+                        <option value="/Arah_Template.pdf">Arah Infotech</option>
+                        <option value="/UPlife.pdf">UPlife</option>
+                        <option value="/Vagerious.pdf">Vagerious</option>
+                        <option value="/Zero7_A4.jpg">Zero7 (Image Version)</option>
                     </select>
 
                     <button

@@ -18,6 +18,7 @@ class EmailRequest(BaseModel):
     letter_content: str
     pdf_base64: Optional[str] = None
     custom_message: Optional[str] = None
+    company_name: Optional[str] = "Arah Infotech Pvt Ltd"
 
 @router.post("/send")
 def send_offer_email(request: EmailRequest, db: Session = Depends(database.get_db)):
@@ -41,7 +42,8 @@ def send_offer_email(request: EmailRequest, db: Session = Depends(database.get_d
         letter_content=request.letter_content,
         pdf_content=pdf_bytes,
         email_body=request.custom_message,
-        subject=getattr(request, 'subject', None) # Safely get subject
+        subject=getattr(request, 'subject', None), # Safely get subject
+        company_name=request.company_name
     )
     
     # 3. Update Status if Sent

@@ -48,6 +48,7 @@ class LetterRequest(BaseModel):
     employee_id: int
     letter_type: str # "Offer", "Appraisal", etc.
     tone: Optional[str] = "Professional"
+    company_name: Optional[str] = "Arah Infotech Pvt Ltd"
 
 class EmailRequest(BaseModel):
     employee_id: int

@@ -22,7 +22,7 @@ class EmailService:
         self.brevo_api_key = os.getenv("BREVO_API_KEY", "").strip()
         self.brevo_sender_email = os.getenv("BREVO_SENDER_EMAIL", self.sender_email).strip() # Fallback to MAIL_USERNAME if not set
 
-    def send_via_brevo(self, recipient_email, candidate_name, subject, body, pdf_content=None):
+    def send_via_brevo(self, recipient_email, candidate_name, subject, body, pdf_content=None, company_name="Arah Infotech Pvt Ltd"):
         url = "https://api.brevo.com/v3/smtp/email"
         
         headers = {
@@ -32,7 +32,7 @@ class EmailService:
         }
         
         payload = {
-            "sender": {"name": "Arah Infotech HR", "email": self.brevo_sender_email},
+            "sender": {"name": f"{company_name} HR", "email": self.brevo_sender_email},
             "to": [{"email": recipient_email, "name": candidate_name}],
             "subject": subject,
             "textContent": body
@@ -57,7 +57,7 @@ class EmailService:
         except Exception as e:
              return {"status": "error", "message": str(e)}
 
-    def send_offer_letter(self, recipient_email, candidate_name, pdf_content=None, letter_content=None, email_body=None, subject=None):
+    def send_offer_letter(self, recipient_email, candidate_name, pdf_content=None, letter_content=None, email_body=None, subject=None, company_name="Arah Infotech Pvt Ltd"):
         """
         Sends an email with the offer letter.
         """
@@ -68,7 +68,7 @@ class EmailService:
             final_body = f"""
             Dear {candidate_name},
 
-            Congratulations! We are pleased to offer you a position at Arah Infotech Pvt Ltd.
+            Congratulations! We are pleased to offer you a position at {company_name}.
             
             Please find the offer letter attached.
 
@@ -82,7 +82,7 @@ class EmailService:
 
         # PRIORITY: Use Brevo API if Key exists
         if self.brevo_api_key:
-            return self.send_via_brevo(recipient_email, candidate_name, subject, final_body, pdf_content)
+            return self.send_via_brevo(recipient_email, candidate_name, subject, final_body, pdf_content, company_name)
 
         # FALLBACK: Use Gmail SMTP
         try:
