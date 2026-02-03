@@ -61,6 +61,37 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
     const [emailBody, setEmailBody] = useState("");
+    const fileInputRef = React.useRef(null);
+
+    const handleCustomTemplateUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            setLoading(true);
+            const res = await fetch(`${API_URL}/upload/template-pdf`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.detail || "Upload failed");
+
+            // Add new template to COMPANY_NAMES (optional, default to generic or keep Arah)
+            // or just rely on state. 
+            // We set it as selected.
+            setSelectedTemplate(data.url);
+            alert(`Custom Template Uploaded! \n${data.filename}`);
+        } catch (err) {
+            console.error(err);
+            alert("Upload failed: " + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Update Email Body when Template/Company Changes
     useEffect(() => {
@@ -243,6 +274,26 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         <option value="/Vagerious.pdf">Vagerious</option>
                         <option value="/Zero7_A4.jpg">Zero7 (Image Version)</option>
                     </select>
+
+                    <input
+                        type="file"
+                        accept="application/pdf"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={handleCustomTemplateUpload}
+                    />
+                    <button
+                        onClick={() => fileInputRef.current.click()}
+                        style={{
+                            background: '#334155',
+                            color: '#e2e8f0', border: '1px dashed #94a3b8',
+                            padding: '12px 20px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.9rem', whiteSpace: 'nowrap'
+                        }}
+                        title="Upload a PDF (Bg will be converted to Image)"
+                    >
+                        📤 Upload PDF Tmpl
+                    </button>
 
                     <button
                         onClick={handleGenerate}
