@@ -50,16 +50,32 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         const container = document.createElement('div');
 
         // CSS to fix alignment and prevent weird breaks
+        // CRITICAL FIX: Force ALL text elements to be BLACK. The * selector with !important ensures
+        // that even if the app is in Dark Mode (where h3/p might be white), the PDF generation
+        // sees them as black relative to the white paper.
         const style = document.createElement('style');
         style.innerHTML = `
-            * { font-family: Helvetica, Arial, sans-serif !important; }
+            * { 
+                font-family: Helvetica, Arial, sans-serif !important; 
+                color: #000000 !important; 
+                -webkit-text-fill-color: #000000 !important;
+            }
             p { margin-bottom: ${config.pMargin} !important; }
-            h3 { margin-top: ${config.hMargin} !important; margin-bottom: 5px !important; font-size: ${parseInt(config.fontSize) + 2}px !important; }
+            h3, h4, strong, b { 
+                margin-top: ${config.hMargin} !important; 
+                margin-bottom: 5px !important; 
+                color: #000000 !important;
+            }
+            h3 { font-size: ${parseInt(config.fontSize) + 2}px !important; }
             .date-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: ${isDense ? '5px' : '20px'} !important; }
             .signature-block { page-break-inside: avoid; margin-top: auto; } /* 'auto' pushes to bottom in flex container */
             /* Compact Table */
-            table { margin-top: 5px !important; width: 100% !important; font-size: ${config.tableSize} !important; }
-            td, th { padding: ${isDense ? '3px' : '8px'} !important; }
+            table { margin-top: 5px !important; width: 100% !important; font-size: ${config.tableSize} !important; border-collapse: collapse !important; }
+            td, th { 
+                padding: ${isDense ? '3px' : '8px'} !important; 
+                border: 1px solid #d1d5db !important; /* Light gray border for table */
+                color: #000000 !important;
+            }
         `;
         container.appendChild(style);
 
@@ -72,6 +88,9 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         container.style.fontSize = config.fontSize;
         container.style.lineHeight = config.lineHeight;
 
+        // --- VITAL FIX: FORCE BLACK TEXT ON CONTAINER ---
+        container.style.color = '#000000';
+        container.style.webkitFontSmoothing = 'antialiased';
 
         // Flexbox logic for ALL modes to stretch content
         container.style.display = 'flex';
@@ -82,6 +101,20 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         container.style.padding = config.padding;
         container.innerHTML = htmlContent;
         document.body.appendChild(container);
+
+        // --- NUCLEAR FIX: MANUALLY FORCE INLINE STYLES ---
+        // html2canvas can sometimes struggle with specific CSS specificity or <style> tags 
+        // when inside a Dark Mode body. We force inline styles on EVERY element to be safe.
+        const allElements = container.querySelectorAll('*');
+        allElements.forEach(el => {
+            el.style.color = '#000000';
+            el.style.webkitTextFillColor = '#000000';
+            // Also force headers specifically just in case
+            if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'STRONG', 'B', 'TD', 'TH'].includes(el.tagName)) {
+                el.style.color = '#000000';
+                el.style.fontWeight = 'bold'; // Ensure boldness is preserved
+            }
+        });
 
         const contentPdfDoc = new jsPDF({
             unit: 'pt',

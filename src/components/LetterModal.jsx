@@ -20,7 +20,7 @@ const EditableContent = ({ initialContent, onChange }) => {
         if (editorRef.current) {
             editorRef.current.innerHTML = initialContent;
         }
-    }, []);
+    }, [initialContent]);
 
     const handleInput = (e) => {
         onChange(e.currentTarget.innerHTML);
@@ -29,6 +29,7 @@ const EditableContent = ({ initialContent, onChange }) => {
     return (
         <div
             ref={editorRef}
+            className="document-editor"
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
@@ -37,12 +38,13 @@ const EditableContent = ({ initialContent, onChange }) => {
                 height: '100%',
                 padding: '3rem',
                 background: 'white',
-                color: '#1e293b', // Dark text
+                color: '#1e293b',
                 overflowY: 'auto',
                 outline: 'none',
                 fontFamily: 'Helvetica, Arial, sans-serif',
-                fontSize: '14px', // Readable edit size
-                lineHeight: '1.6'
+                fontSize: '14px',
+                lineHeight: '1.6',
+                boxShadow: '0 0 20px rgba(0,0,0,0.2)'
             }}
         />
     );
@@ -50,14 +52,14 @@ const EditableContent = ({ initialContent, onChange }) => {
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
-    const [generatedContent, setGeneratedContent] = useState(''); // Text content
+    const [generatedContent, setGeneratedContent] = useState('');
     const [loading, setLoading] = useState(false);
-    const [viewMode, setViewMode] = useState('pdf'); // 'pdf' or 'edit'
+    const [viewMode, setViewMode] = useState('pdf');
 
     const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
+    const prevTemplateRef = React.useRef(selectedTemplate);
 
-    // PDF State
-    const [pdfUrl, setPdfUrl] = useState(null); // Data URI for Iframe
+    const [pdfUrl, setPdfUrl] = useState(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
     const [emailBody, setEmailBody] = useState("");
@@ -66,10 +68,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const handleCustomTemplateUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const formData = new FormData();
         formData.append('file', file);
-
         try {
             setLoading(true);
             const res = await fetch(`${API_URL}/upload/template-pdf`, {
@@ -77,12 +77,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 body: formData
             });
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.detail || "Upload failed");
-
-            // Add new template to COMPANY_NAMES (optional, default to generic or keep Arah)
-            // or just rely on state. 
-            // We set it as selected.
             setSelectedTemplate(data.url);
             alert(`Custom Template Uploaded! \n${data.filename}`);
         } catch (err) {
@@ -93,32 +88,51 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         }
     };
 
-    // Update Email Body when Template/Company Changes
+    // Auto-update content (text replacement) and email when template changes
     useEffect(() => {
         const company = COMPANY_NAMES[selectedTemplate] || 'Arah Infotech Pvt Ltd';
+        const prevCompany = COMPANY_NAMES[prevTemplateRef.current] || 'Arah Infotech Pvt Ltd';
+
+        // Update Email Body
         setEmailBody(
             `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${company}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
         );
+
+        // Update Generated HTML Content if it exists
+        if (generatedContent) {
+            // Escape special chars for regex: . * + ? ^ $ { } ( ) | [ ] \
+            const escapedPrev = prevCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escapedPrev, 'g');
+            const newContent = generatedContent.replace(regex, company);
+
+            if (newContent !== generatedContent) {
+                setGeneratedContent(newContent);
+                // Updating generatedContent will trigger the auto-preview effect below
+            } else if (viewMode === 'pdf') {
+                // Even if text didn't change, we must refresh PDF to show new background
+                generatePreview(generatedContent);
+            }
+        }
+
+        prevTemplateRef.current = selectedTemplate;
     }, [selectedTemplate, employee.name]);
 
-    // Auto-Generate on Mount
+    // Auto-Preview when generatedContent changes
     useEffect(() => {
-        // Optional: Auto-load draft? No, wait for user click or do it now?
-        // Let's NOT auto-call AI to save cost/time, user clicks Generate.
-    }, []);
+        if (!generatedContent || viewMode !== 'pdf') return;
+        // Debounce only if typing (handled by typing effect? No, this is triggered by setGeneratedContent)
+        // Note: We need immediate update if it was a template switch (handled above?)
+        // Let's use a short delay or check if it was a bulk change.
 
-    // Regenerate PDF when Template changes (if content exists)
-    useEffect(() => {
-        if (generatedContent && viewMode === 'pdf') {
+        const timer = setTimeout(() => {
             generatePreview(generatedContent);
-        }
-    }, [selectedTemplate]);
-
+        }, 1000); // 1s delay
+        return () => clearTimeout(timer);
+    }, [generatedContent]);
 
     const handleGenerate = () => {
         setLoading(true);
-        setPdfUrl(null); // Clear previous
-
+        setPdfUrl(null);
         fetch(`${API_URL}/letters/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -133,8 +147,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             .then(async data => {
                 setGeneratedContent(data.content);
                 setLoading(false);
-
-                // Immediately Generate PDF Preview
+                // Immediate preview
                 await generatePreview(data.content);
             })
             .catch(err => {
@@ -147,16 +160,12 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const generatePreview = async (htmlContent) => {
         setIsGeneratingPdf(true);
         try {
-            // Remove the Company Header (Logo/Address) to avoid double header with the PDF Template
-            // This Regex removes the first centered div which usually contains the logo
+            // Clean up header for PDF (which has its own logo in background)
             const contentWithoutHeader = htmlContent.replace(/<div style="text-align: center; border-bottom: 2px solid #0056b3;[\s\S]*?<\/div>/i, '');
-
-            // Use current state for template
             const dataUri = await generatePdfWithTemplate(contentWithoutHeader, selectedTemplate);
             setPdfUrl(dataUri);
         } catch (e) {
             console.error(e);
-            alert("Failed to render PDF template");
         }
         setIsGeneratingPdf(false);
         setViewMode('pdf');
@@ -175,23 +184,16 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const handleSendEmail = async () => {
         const btn = document.getElementById('emailBtn');
         btn.innerText = 'Sending...';
+        btn.disabled = true;
 
         try {
-            // 1. Send to Backend
             const subject = `${letterType} - ${employee.name}`;
-
-            // pdfUrl is "data:application/pdf;base64,JVBER..."
-            // We need just the base64 part for the backend usually, depends on backend logic.
-            // Backend expects `pdf_base64` which is usually the full Data URI or just the base64?
-            // Looking at previous code `doc.output('datauristring')` returns full strings.
-            // So pdfUrl is perfect.
-
             const res = await fetch(`${API_URL}/email/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     employee_id: employee.id,
-                    letter_content: generatedContent, // Valid for archiving text
+                    letter_content: generatedContent,
                     pdf_base64: pdfUrl,
                     custom_message: emailBody,
                     subject: subject,
@@ -210,49 +212,65 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             console.error(err);
             alert("Failed: " + err.message);
             btn.innerText = 'Retry ❌';
+            btn.disabled = false;
         }
     };
 
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.85)',
+            background: 'var(--modal-overlay)',
+            backdropFilter: 'blur(5px)',
             display: 'flex', justifyContent: 'center', alignItems: 'center',
-            zIndex: 1000
+            zIndex: 3000
         }}>
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
-                    background: '#0f172a',
-                    padding: '2rem',
-                    borderRadius: '24px',
-                    width: '1400px',
-                    maxWidth: '98vw',
-                    height: '95vh',
+                    background: 'var(--bg-secondary)',
+                    padding: '0.75rem',
+                    width: '100vw',
+                    height: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    border: '1px solid #334155',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    border: 'none',
                 }}
             >
-                {/* HEADER */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #334155', paddingBottom: '1rem' }}>
+                {/* COMPACT THEMED HEADER */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#f1f5f9', fontSize: '1.8rem' }}>Generate Letter for {employee.name}</h2>
-                        <p style={{ margin: '5px 0 0', color: '#94a3b8' }}>AI-Powered Generation with Official Template</p>
+                        <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: 700 }}>
+                            <span style={{ color: 'var(--accent-color)' }}>✨</span> Document Workshop: {employee.name}
+                        </h2>
                     </div>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '2rem', cursor: 'pointer' }}>×</button>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: '#ef4444',
+                            border: 'none',
+                            color: 'white',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            fontSize: '1.2rem',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)'
+                        }}
+                    >
+                        ×
+                    </button>
                 </div>
 
-                {/* CONTROLS */}
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                {/* THEMED CONTROLS */}
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap', background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '12px' }}>
                     <select
                         value={letterType}
                         onChange={(e) => setLetterType(e.target.value)}
                         style={{
-                            padding: '12px 20px', borderRadius: '8px', background: '#1e293b',
-                            color: 'white', border: '1px solid #475569', flex: 1, fontSize: '1rem'
+                            padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
                         }}
                     >
                         <option>Offer Letter</option>
@@ -265,8 +283,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         value={selectedTemplate}
                         onChange={(e) => setSelectedTemplate(e.target.value)}
                         style={{
-                            padding: '12px 20px', borderRadius: '8px', background: '#1e293b',
-                            color: 'white', border: '1px solid #475569', flex: 1, fontSize: '1rem'
+                            padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
                         }}
                     >
                         <option value="/Arah_Template.pdf">Arah Infotech</option>
@@ -275,158 +293,118 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         <option value="/Zero7_A4.jpg">Zero7 (Image Version)</option>
                     </select>
 
-                    <input
-                        type="file"
-                        accept="application/pdf"
-                        ref={fileInputRef}
-                        style={{ display: 'none' }}
-                        onChange={handleCustomTemplateUpload}
-                    />
+                    <input type="file" accept="application/pdf" ref={fileInputRef} style={{ display: 'none' }} onChange={handleCustomTemplateUpload} />
                     <button
                         onClick={() => fileInputRef.current.click()}
                         style={{
-                            background: '#334155',
-                            color: '#e2e8f0', border: '1px dashed #94a3b8',
-                            padding: '12px 20px', borderRadius: '8px', cursor: 'pointer',
-                            fontSize: '0.9rem', whiteSpace: 'nowrap'
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-secondary)', border: '1px dashed var(--border-color)',
+                            padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.85rem', fontWeight: 600
                         }}
-                        title="Upload a PDF (Bg will be converted to Image)"
                     >
-                        📤 Upload PDF Tmpl
+                        📤 Custom Template
                     </button>
 
                     <button
                         onClick={handleGenerate}
                         disabled={loading}
                         style={{
-                            background: loading ? '#475569' : '#646cff',
-                            color: 'white', border: 'none', padding: '12px 30px',
+                            background: loading ? 'var(--border-color)' : 'var(--accent-color)',
+                            color: 'white', border: 'none', padding: '10px 24px',
                             borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
-                            minWidth: '150px'
+                            minWidth: '140px', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)'
                         }}
                     >
-                        {loading ? '✨ Thinking...' : '✨ Generate with AI'}
+                        {loading ? 'AI Working...' : '✨ Generate AI Draft'}
                     </button>
-
-                    {/* VIEW TOGGLE */}
-                    {generatedContent && (
-                        <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', border: '1px solid #475569', overflow: 'hidden' }}>
-                            <button
-                                onClick={() => setViewMode('edit')}
-                                style={{
-                                    padding: '12px 20px', border: 'none', cursor: 'pointer',
-                                    background: viewMode === 'edit' ? '#334155' : 'transparent',
-                                    color: viewMode === 'edit' ? 'white' : '#94a3b8', fontWeight: 'bold'
-                                }}
-                            >
-                                ✏️ Edit Text
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (viewMode !== 'pdf') generatePreview(generatedContent);
-                                    setViewMode('pdf');
-                                }}
-                                style={{
-                                    padding: '12px 20px', border: 'none', cursor: 'pointer',
-                                    background: viewMode === 'pdf' ? '#334155' : 'transparent',
-                                    color: viewMode === 'pdf' ? 'white' : '#94a3b8', fontWeight: 'bold'
-                                }}
-                            >
-                                📄 PDF Preview
-                            </button>
-                        </div>
-                    )}
                 </div>
 
-                {/* PREVIEW AREA */}
-                <div style={{
-                    flex: 1,
-                    background: '#1e293b', // Dark container
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative'
-                }}>
+                {/* SPLIT SCREEN area */}
+                <div style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden' }}>
+
                     {!generatedContent && !loading && (
-                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                            <p>Select a letter type and click Generate to see the preview.</p>
+                        <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
+                            <p style={{ fontSize: '1.1rem' }}>Choose a template and click <b>Generate</b> to begin mapping the future.</p>
                         </div>
                     )}
 
                     {loading && (
-                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#646cff' }}>
-                            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #334155', borderTop: '4px solid #646cff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                            <p style={{ marginTop: '1rem' }}>Consulting AI & Formatting PDF...</p>
+                        <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+                            <div className="spinner" style={{ width: '50px', height: '50px', border: '5px solid var(--border-color)', borderTop: '5px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            <p style={{ marginTop: '1.5rem', fontWeight: 600 }}>Synthesizing professional document...</p>
                         </div>
                     )}
 
-                    {/* EDIT MODE: WYSIWYG Editor */}
-                    {generatedContent && viewMode === 'edit' && !loading && (
-                        <EditableContent
-                            initialContent={generatedContent}
-                            onChange={setGeneratedContent}
-                        />
+                    {generatedContent && !loading && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                ✏️ Rich Text Editor <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>(Auto-Syncing)</span>
+                            </div>
+                            <div style={{ flex: 1, overflowY: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', position: 'relative', padding: '10px' }}>
+                                <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{ transform: 'scale(0.75)', transformOrigin: 'top center', width: '100%', height: '134%', display: 'flex', justifyContent: 'center' }}>
+                                        <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
-                    {/* PDF MODE: Iframe */}
-                    {generatedContent && viewMode === 'pdf' && !loading && (
-                        <>
-                            {isGeneratingPdf ? (
-                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                    Building PDF Preview...
-                                </div>
-                            ) : pdfUrl ? (
-                                <iframe
-                                    src={pdfUrl}
-                                    style={{ width: '100%', height: '100%', border: 'none', background: '#525659' }}
-                                    title="PDF Preview"
-                                />
-                            ) : (
-                                <div style={{ padding: '2rem', color: 'red' }}>PDF Generation Failed.</div>
-                            )}
-                        </>
+                    {generatedContent && !loading && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>📄 PDF Synchronizer (75%)</span>
+                                {isGeneratingPdf && <span style={{ color: 'var(--accent-color)', animation: 'pulse 1s infinite' }}>● Syncing</span>}
+                            </div>
+                            <div style={{ flex: 1, background: '#525659', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative' }}>
+                                {pdfUrl ? (
+                                    <iframe src={pdfUrl + "#toolbar=0&navpanes=0&zoom=75"} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
+                                ) : (
+                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Finalizing pixels...</div>
+                                )}
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* FOOTER ACTIONS */}
+                {/* FOOTER */}
                 {generatedContent && (
-                    <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #334155' }}>
-                        {/* Email Message Input */}
+                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-                                📧 Email Body (Personal Note):
+                            <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
+                                📧 Messaging:
                             </label>
                             <textarea
                                 value={emailBody}
                                 onChange={e => setEmailBody(e.target.value)}
                                 style={{
-                                    width: '100%', height: '60px', borderRadius: '6px',
-                                    background: '#1e293b', border: '1px solid #475569', color: 'white',
-                                    padding: '10px', fontSize: '0.9rem', resize: 'none'
+                                    width: '100%', height: '100px', borderRadius: '10px',
+                                    background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
+                                    padding: '12px', fontSize: '0.9rem', resize: 'none', outline: 'none'
                                 }}
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
                             <button
                                 onClick={handleDownloadPDF}
                                 style={{
-                                    background: '#1e293b', border: '2px solid #646cff', color: '#646cff',
-                                    padding: '14px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
+                                    background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
+                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem'
                                 }}
                             >
-                                ⬇️ Download
+                                ⬇️ Archive PDF
                             </button>
                             <button
                                 id="emailBtn"
                                 onClick={handleSendEmail}
                                 style={{
-                                    background: '#646cff', border: 'none', color: 'white',
-                                    padding: '14px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
+                                    background: 'var(--accent-color)', border: 'none', color: 'white',
+                                    padding: '12px 28px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)'
                                 }}
                             >
-                                ✉️ Send Email
+                                ✉️ Dispatch to Candidate
                             </button>
                         </div>
                     </div>

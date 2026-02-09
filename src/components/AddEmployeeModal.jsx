@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState(() => {
         if (initialData) {
-            // Smart Detection for Internship
-            // specific check: if employment_type OR designation contains "intern" (case-insensitive)
             const typeLower = (initialData.employment_type || '').toLowerCase();
             const roleLower = (initialData.designation || '').toLowerCase();
             const isIntern = typeLower.includes('intern') || roleLower.includes('intern');
@@ -32,138 +30,219 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
 
     const handleChange = (e) => {
         let { name, value } = e.target;
-
-        // Custom validation for Date: Clear if value exceeds standard YYYY-MM-DD length (10 chars)
-        if (name === 'joining_date' && value.length > 10) {
-            value = ''; // Reset to blank if year becomes too long (e.g. 5 digits)
-        }
-
+        if (name === 'joining_date' && value.length > 10) value = '';
         setFormData({ ...formData, [name]: value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
         const isIntern = formData.employment_type === 'Internship';
-
         const payload = {
             ...formData,
-            // If Internship, set salary fields to 0
             basic_salary: isIntern ? 0 : (formData.basic_salary ? parseFloat(formData.basic_salary) : 0),
             ctc: isIntern ? 0 : (formData.ctc ? parseFloat(formData.ctc) : 0)
         };
         onSave(payload);
     };
 
+    const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{
+                fontSize: '0.8rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontWeight: '700',
+                color: 'var(--text-muted)'
+            }}>
+                {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+            </label>
+            {options ? (
+                <div style={{ position: 'relative' }}>
+                    <select
+                        name={name}
+                        value={value}
+                        onChange={onChange}
+                        style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            background: 'var(--bg-primary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '12px',
+                            color: 'var(--text-primary)',
+                            fontSize: '1rem',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            appearance: 'none',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
+                        ▼
+                    </div>
+                </div>
+            ) : (
+                <input
+                    type={type}
+                    name={name}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    disabled={disabled}
+                    required={required}
+                    autoComplete="off"
+                    style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: disabled ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '12px',
+                        color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'all 0.2s',
+                        cursor: disabled ? 'not-allowed' : 'text'
+                    }}
+                    onFocus={(e) => { if (!disabled) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
+                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+                />
+            )}
+        </div>
+    );
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.7)',
+            background: 'var(--modal-overlay)',
+            backdropFilter: 'blur(10px)',
             display: 'flex', justifyContent: 'center', alignItems: 'center',
-            zIndex: 1000
+            zIndex: 2000
         }}>
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
                 style={{
-                    background: '#1e293b',
-                    padding: '4rem',
-                    borderRadius: '24px',
-                    width: '1200px',
+                    background: 'var(--card-bg)',
+                    padding: '3rem',
+                    borderRadius: '32px',
+                    width: '1000px',
                     maxWidth: '95vw',
-                    border: '1px solid #334155',
                     maxHeight: '90vh',
                     overflowY: 'auto',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--card-shadow)'
                 }}
             >
-                <h2 style={{ marginTop: 0, color: '#f1f5f9', fontSize: '2rem', marginBottom: '2rem' }}>
-                    {initialData ? 'Edit Employee / Payroll' : 'Add New Employee'}
-                </h2>
+                {/* Header */}
+                <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+                    <h2 style={{
+                        margin: 0,
+                        fontSize: '2.2rem',
+                        fontWeight: '800',
+                        color: 'var(--text-primary)',
+                        marginBottom: '0.5rem'
+                    }}>
+                        {initialData ? 'Update Employee Profile' : 'New Employee Onboarding'}
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1rem', fontWeight: '500' }}>
+                        {initialData ? 'Refine details for high-performance offer letters.' : 'Empower your team with a new enterprise member.'}
+                    </p>
+                </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                                Employee ID <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'normal' }}>(Auto-generated if empty)</span>
-                            </label>
-                            <input name="emp_id" placeholder="Auto-generated" value={formData.emp_id} onChange={handleChange} disabled={!!initialData}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: initialData ? '#1e293b' : '#334155', color: initialData ? '#94a3b8' : 'white', cursor: initialData ? 'not-allowed' : 'text' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Joining Date</label>
-                            <input required type="date" name="joining_date" maxLength={10} value={formData.joining_date} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                        </div>
-                    </div>
+                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2.5rem' }}>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Full Name</label>
-                        <input required name="name" placeholder="John Doe" value={formData.name} onChange={handleChange}
-                            style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Email</label>
-                        <input required type="email" name="email" placeholder="john@company.com" value={formData.email} onChange={handleChange}
-                            style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Designation</label>
-                            <input required name="designation" placeholder="Software Engineer" value={formData.designation} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Department</label>
-                            <input required name="department" placeholder="Engineering" value={formData.department} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
+                    {/* Sections with subtle backgrounds */}
+                    <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '1.4rem' }}>👤</span>
+                            <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Personal Information</span>
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
+                            <div style={{ gridColumn: 'span 4' }}>
+                                <InputGroup label="Employee ID" name="emp_id" placeholder="Auto-generated" value={formData.emp_id} onChange={handleChange} disabled={!!initialData} />
+                            </div>
+                            <div style={{ gridColumn: 'span 8' }}>
+                                <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} required />
+                            </div>
+                            <div style={{ gridColumn: 'span 8' }}>
+                                <InputGroup label="Email Address" name="email" type="email" placeholder="sarah@corp.com" value={formData.email} onChange={handleChange} required />
+                            </div>
+                            <div style={{ gridColumn: 'span 4' }}>
+                                <InputGroup label="Joining Date" name="joining_date" type="date" value={formData.joining_date} onChange={handleChange} required />
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Employment Type</label>
-                            <select name="employment_type" value={formData.employment_type} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }}>
-                                <option value="Full Time">Full Time</option>
-                                <option value="Internship">Internship</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Location</label>
-                            <input required name="location" placeholder="New York, Remote" value={formData.location} onChange={handleChange}
-                                style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
+                    <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '1.4rem' }}>💼</span>
+                            <span style={{ borderBottom: '2px solid #10b981', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} required />
+                            <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} required />
+                            <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} />
+                            <InputGroup label="Location" name="location" placeholder="e.g. Bangalore, Remote" value={formData.location} onChange={handleChange} required />
                         </div>
                     </div>
 
                     {formData.employment_type === 'Full Time' && (
-                        <>
-                            <h3 style={{ margin: '1rem 0 0.5rem', color: '#646cff', fontSize: '1.5rem' }}>Payroll Details</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Annual CTC</label>
-                                    <input required type="number" name="ctc" placeholder="1200000" value={formData.ctc} onChange={handleChange}
-                                        style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Basic Salary (Optional)</label>
-                                    <input type="number" name="basic_salary" placeholder="Auto-calculated if empty" value={formData.basic_salary} onChange={handleChange}
-                                        style={{ width: '100%', padding: '16px', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid #475569', background: '#334155', color: 'white' }} />
-                                </div>
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}
+                        >
+                            <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '1.4rem' }}>💰</span>
+                                <span style={{ borderBottom: '2px solid #f59e0b', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required />
+                                <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} />
                             </div>
-                        </>
+                        </motion.div>
                     )}
 
-                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', paddingTop: '2rem', borderTop: '2px solid var(--border-color)' }}>
                         <button type="button" onClick={onClose} style={{
-                            background: 'transparent', border: '2px solid #64748b', color: '#cbd5e1', padding: '16px 32px', fontSize: '1.2rem', borderRadius: '8px', cursor: 'pointer'
-                        }}>Cancel</button>
-                        <button type="submit" className="btn-primary" style={{
-                            padding: '16px 32px', fontSize: '1.2rem', borderRadius: '8px', cursor: 'pointer', background: '#646cff', color: 'white', border: 'none', fontWeight: 'bold'
-                        }}>
-                            {initialData ? 'Update Employee' : 'Save Employee'}
+                            flex: 1,
+                            padding: '16px',
+                            background: 'transparent',
+                            border: '2px solid var(--border-color)',
+                            color: 'var(--text-primary)',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)' }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
+                        >
+                            Cancel
+                        </button>
+                        <button type="submit" style={{
+                            flex: 2,
+                            padding: '16px',
+                            background: 'var(--accent-color)',
+                            border: 'none',
+                            color: 'white',
+                            fontSize: '1.1rem',
+                            fontWeight: '800',
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            boxShadow: '0 8px 20px -5px rgba(99, 102, 241, 0.4)',
+                            transition: 'transform 0.1s, background 0.2s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                        }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'var(--accent-hover)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'var(--accent-color)'}
+                            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                            {initialData ? 'Apply Updates' : 'Onboard Employee'}
+                            <span style={{ fontSize: '1.3rem' }}>→</span>
                         </button>
                     </div>
                 </form>
