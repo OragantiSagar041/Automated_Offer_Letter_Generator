@@ -16,9 +16,27 @@ const COMPANY_NAMES = {
 const EditableContent = ({ initialContent, onChange }) => {
     const editorRef = React.useRef(null);
 
+    // Initial render only
     React.useEffect(() => {
-        if (editorRef.current) {
+        if (editorRef.current && initialContent && !editorRef.current.innerHTML) {
             editorRef.current.innerHTML = initialContent;
+        }
+    }, []);
+
+    // If initialContent changes significantly (e.g. new generation), update it
+    // But be careful not to overwrite user edits if it's just a small re-render
+    React.useEffect(() => {
+        if (editorRef.current && initialContent !== editorRef.current.innerHTML) {
+            // Only update if the content is truly different (e.g. from AI generation)
+            // avoiding overwriting if the user is typing (which updates state)
+            // This is tricky. simpler: only update if the passed initialContent
+            // doesn't match what we have, but we need to trust the parent pushes new content only when needed.
+            // For now, let's trust the parent only sends new initialContent when it changes from source.
+
+            // Check if the update is coming from our own input (loop)
+            if (document.activeElement !== editorRef.current) {
+                editorRef.current.innerHTML = initialContent;
+            }
         }
     }, [initialContent]);
 
@@ -50,6 +68,8 @@ const EditableContent = ({ initialContent, onChange }) => {
     );
 };
 
+
+
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
     const [generatedContent, setGeneratedContent] = useState('');
@@ -57,6 +77,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [viewMode, setViewMode] = useState('pdf');
 
     const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
+    const [companyName, setCompanyName] = useState('Arah Infotech Pvt Ltd');
     const prevTemplateRef = React.useRef(selectedTemplate);
 
     const [pdfUrl, setPdfUrl] = useState(null);
@@ -90,12 +111,19 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
     // Auto-update content (text replacement) and email when template changes
     useEffect(() => {
-        const company = COMPANY_NAMES[selectedTemplate] || 'Arah Infotech Pvt Ltd';
-        const prevCompany = COMPANY_NAMES[prevTemplateRef.current] || 'Arah Infotech Pvt Ltd';
+        // If the selected template is a KNOWN one, switch the company name automatically.
+        // If it's a custom one (not in map), we leave the current company name (or user can edit it).
+        if (COMPANY_NAMES[selectedTemplate]) {
+            setCompanyName(COMPANY_NAMES[selectedTemplate]);
+        }
+    }, [selectedTemplate]);
+
+    useEffect(() => {
+        const prevCompany = COMPANY_NAMES[prevTemplateRef.current] || 'Arah Infotech Pvt Ltd'; // Fallback for prev
 
         // Update Email Body
         setEmailBody(
-            `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${company}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
+            `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${companyName}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
         );
 
         // Update Generated HTML Content if it exists
@@ -103,7 +131,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             // Escape special chars for regex: . * + ? ^ $ { } ( ) | [ ] \
             const escapedPrev = prevCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(escapedPrev, 'g');
-            const newContent = generatedContent.replace(regex, company);
+            const newContent = generatedContent.replace(regex, companyName);
 
             if (newContent !== generatedContent) {
                 setGeneratedContent(newContent);
@@ -115,7 +143,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         }
 
         prevTemplateRef.current = selectedTemplate;
-    }, [selectedTemplate, employee.name]);
+    }, [companyName, employee.name, selectedTemplate, generatedContent, viewMode]);
 
     // Auto-Preview when generatedContent changes
     useEffect(() => {
@@ -140,7 +168,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 employee_id: employee.id,
                 letter_type: letterType,
                 tone: "Professional",
-                company_name: COMPANY_NAMES[selectedTemplate] || "Arah Infotech Pvt Ltd"
+                company_name: companyName
             })
         })
             .then(res => res.json())
@@ -197,7 +225,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     pdf_base64: pdfUrl,
                     custom_message: emailBody,
                     subject: subject,
-                    company_name: COMPANY_NAMES[selectedTemplate] || "Arah Infotech Pvt Ltd"
+                    company_name: companyName
                 })
             });
 
@@ -265,6 +293,17 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
                 {/* THEMED CONTROLS */}
                 <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap', background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '12px' }}>
+                    <input
+                        type="text"
+                        placeholder="Company Name"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        style={{
+                            padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none', minWidth: '200px'
+                        }}
+                    />
+
                     <select
                         value={letterType}
                         onChange={(e) => setLetterType(e.target.value)}

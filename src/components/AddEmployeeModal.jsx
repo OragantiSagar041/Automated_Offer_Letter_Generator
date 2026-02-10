@@ -1,6 +1,72 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
+const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{
+            fontSize: '0.8rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontWeight: '700',
+            color: 'var(--text-muted)'
+        }}>
+            {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+        </label>
+        {options ? (
+            <div style={{ position: 'relative' }}>
+                <select
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        background: 'var(--bg-primary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '12px',
+                        color: 'var(--text-primary)',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
+                    ▼
+                </div>
+            </div>
+        ) : (
+            <input
+                type={type}
+                name={name}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                disabled={disabled}
+                required={required}
+                autoComplete="off"
+                style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: disabled ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    cursor: disabled ? 'not-allowed' : 'text'
+                }}
+                onFocus={(e) => { if (!disabled) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+            />
+        )}
+    </div>
+);
+
 const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState(() => {
         if (initialData) {
@@ -45,71 +111,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
         onSave(payload);
     };
 
-    const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{
-                fontSize: '0.8rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                fontWeight: '700',
-                color: 'var(--text-muted)'
-            }}>
-                {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
-            </label>
-            {options ? (
-                <div style={{ position: 'relative' }}>
-                    <select
-                        name={name}
-                        value={value}
-                        onChange={onChange}
-                        style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            background: 'var(--bg-primary)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '12px',
-                            color: 'var(--text-primary)',
-                            fontSize: '1rem',
-                            outline: 'none',
-                            cursor: 'pointer',
-                            appearance: 'none',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                    <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
-                        ▼
-                    </div>
-                </div>
-            ) : (
-                <input
-                    type={type}
-                    name={name}
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={onChange}
-                    disabled={disabled}
-                    required={required}
-                    autoComplete="off"
-                    style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        background: disabled ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '12px',
-                        color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'all 0.2s',
-                        cursor: disabled ? 'not-allowed' : 'text'
-                    }}
-                    onFocus={(e) => { if (!disabled) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
-                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
-                />
-            )}
-        </div>
-    );
+
 
     return (
         <div style={{
