@@ -181,28 +181,28 @@ function App() {
   return (
     <div className="container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
 
-      {/* --- FLOATING THEME TOGGLE (BETTER POSITIONED) --- */}
-      <div style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 1100 }}>
+      {/* --- FLOATING THEME TOGGLE (BETTER POSITIONED & COMPACT) --- */}
+      <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 1100 }}>
         <button
           onClick={toggleTheme}
           style={{
-            padding: '12px 20px',
+            padding: '8px 16px',
             borderRadius: '50px',
-            border: '2px solid var(--accent-color)',
+            border: '1px solid var(--border-color)',
             background: 'var(--bg-secondary)',
             color: 'var(--text-primary)',
-            fontSize: '1rem',
-            fontWeight: '800',
+            fontSize: '0.85rem',
+            fontWeight: '700',
             cursor: 'pointer',
-            boxShadow: 'var(--card-shadow)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            gap: '8px',
+            transition: 'all 0.2s ease'
           }}
           className="theme-toggle-btn"
         >
-          {theme === 'dark' ? '☀️ SWITCH TO LIGHT' : '🌙 SWITCH TO DARK'}
+          {theme === 'dark' ? '☀️' : '🌙'}
         </button>
       </div>
 
@@ -250,18 +250,16 @@ function App() {
           />
         </div>
         <h1 style={{
-          fontSize: '3.5rem',
+          fontSize: '3rem',
           marginBottom: '0.5rem',
-          fontWeight: 900,
-          background: 'linear-gradient(135deg, var(--accent-color), #a855f7)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          letterSpacing: '-1px'
+          fontWeight: 800,
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.5px'
         }}>
           Arah Infotech - Admin Portal
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', letterSpacing: '4px', fontWeight: 700, textTransform: 'uppercase', opacity: 0.8 }}>
-          ENTERPRISE OFFER MANAGEMENT & PAYROLL
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', letterSpacing: '2px', fontWeight: 600, textTransform: 'uppercase', opacity: 0.7 }}>
+          Enterprise Offer Management System
         </p>
       </header>
 
@@ -386,9 +384,11 @@ function App() {
             <motion.div
               key={emp.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               style={{
+                position: 'relative', // For absolute positioning of edit/delete icons
                 background: 'var(--card-bg)', padding: '2rem', borderRadius: '24px',
                 border: selectedIds.has(emp.id) ? '3px solid var(--accent-color)' : '1px solid var(--border-color)',
-                boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', gap: '1.5rem', transition: 'all 0.2s ease'
+                boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', gap: '1.5rem', transition: 'all 0.2s ease',
+                height: '100%' // Ensure consistent height in grid
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -400,13 +400,14 @@ function App() {
                     style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
                   />
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{emp.name}</h3>
-                    <p style={{ margin: 0, color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{emp.designation}</p>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', paddingRight: '60px' }}>{emp.name}</h3>
+                    <p style={{ margin: 0, color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{emp.designation}</p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px' }}>✏️</button>
-                  <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px' }}>🗑️</button>
+                {/* MOVED TO CORNER (As per TC_007) */}
+                <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', gap: '8px' }}>
+                  <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s' }} title="Edit">✏️</button>
+                  <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s' }} title="Delete">🗑️</button>
                 </div>
               </div>
 
@@ -418,6 +419,7 @@ function App() {
               <button
                 onClick={() => setSelectedEmployee(emp)}
                 style={{
+                  marginTop: 'auto', // Pushes button to bottom
                   width: '100%',
                   background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-color)',
                   border: `2px solid var(--accent-color)`,

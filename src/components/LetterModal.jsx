@@ -78,7 +78,14 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
     const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
     const [companyName, setCompanyName] = useState('Arah Infotech Pvt Ltd');
+
     const prevTemplateRef = React.useRef(selectedTemplate);
+    const contentRef = React.useRef(generatedContent);
+
+    // Keep contentRef in sync
+    useEffect(() => {
+        contentRef.current = generatedContent;
+    }, [generatedContent]);
 
     const [pdfUrl, setPdfUrl] = useState(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -127,34 +134,34 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         );
 
         // Update Generated HTML Content if it exists
-        if (generatedContent) {
+        const currentContent = contentRef.current;
+        if (currentContent) {
             // Escape special chars for regex: . * + ? ^ $ { } ( ) | [ ] \
             const escapedPrev = prevCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(escapedPrev, 'g');
-            const newContent = generatedContent.replace(regex, companyName);
+            const newContent = currentContent.replace(regex, companyName);
 
-            if (newContent !== generatedContent) {
+            if (newContent !== currentContent) {
                 setGeneratedContent(newContent);
-                // Updating generatedContent will trigger the auto-preview effect below
+                // Updating generatedContent will trigger the debounced effect below
             } else if (viewMode === 'pdf') {
-                // Even if text didn't change, we must refresh PDF to show new background
-                generatePreview(generatedContent);
+                // If text didn't change (e.g. regex didn't match), we MUST refresh PDF to show new background/header
+                // We call this directly because setGeneratedContent wasn't called, so the debounce effect won't run.
+                generatePreview(currentContent);
             }
         }
 
         prevTemplateRef.current = selectedTemplate;
-    }, [companyName, employee.name, selectedTemplate, generatedContent, viewMode]);
+    }, [companyName, employee.name, selectedTemplate]);
 
     // Auto-Preview when generatedContent changes
     useEffect(() => {
         if (!generatedContent || viewMode !== 'pdf') return;
-        // Debounce only if typing (handled by typing effect? No, this is triggered by setGeneratedContent)
-        // Note: We need immediate update if it was a template switch (handled above?)
-        // Let's use a short delay or check if it was a bulk change.
 
+        // Debounce typing to prevent excessive PDF generation
         const timer = setTimeout(() => {
             generatePreview(generatedContent);
-        }, 1000); // 1s delay
+        }, 500); // Reduced to 500ms for faster feedback
         return () => clearTimeout(timer);
     }, [generatedContent]);
 

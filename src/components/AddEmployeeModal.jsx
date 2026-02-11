@@ -162,7 +162,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
                             <div style={{ gridColumn: 'span 4' }}>
-                                <InputGroup label="Employee ID" name="emp_id" placeholder="Auto-generated" value={formData.emp_id} onChange={handleChange} disabled={!!initialData} />
+                                <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} />
                             </div>
                             <div style={{ gridColumn: 'span 8' }}>
                                 <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} required />
@@ -196,7 +196,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                             style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}
                         >
                             <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '1.4rem' }}>💰</span>
+                                <span style={{ fontSize: '1.4rem' }}>₹</span>
                                 <span style={{ borderBottom: '2px solid #f59e0b', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
