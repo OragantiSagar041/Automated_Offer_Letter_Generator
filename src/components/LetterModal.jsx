@@ -40,35 +40,114 @@ const EditableContent = ({ initialContent, onChange }) => {
         }
     }, [initialContent]);
 
-    const handleInput = (e) => {
-        onChange(e.currentTarget.innerHTML);
+    const [activeFormats, setActiveFormats] = React.useState({});
+
+    const checkActiveFormats = () => {
+        setActiveFormats({
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            justifyLeft: document.queryCommandState('justifyLeft'),
+            justifyCenter: document.queryCommandState('justifyCenter'),
+            justifyRight: document.queryCommandState('justifyRight'),
+        });
     };
 
+    const handleInput = (e) => {
+        onChange(e.currentTarget.innerHTML);
+        checkActiveFormats();
+    };
+
+    const execCmd = (cmd, val = null) => {
+        document.execCommand(cmd, false, val);
+        if (editorRef.current) onChange(editorRef.current.innerHTML); // Trigger update
+        checkActiveFormats();
+    };
+
+    const getBtnStyle = (isActive) => ({
+        padding: '6px 10px',
+        background: isActive ? '#e0e7ff' : 'white', // Light indigo for active
+        border: isActive ? '1px solid var(--accent-color)' : '1px solid #ccc',
+        color: isActive ? 'var(--accent-color)' : '#333',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        minWidth: '32px',
+        fontWeight: isActive ? 'bold' : 'normal',
+        transition: 'all 0.1s'
+    });
+
     return (
-        <div
-            ref={editorRef}
-            className="document-editor"
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleInput}
-            style={{
-                width: '100%',
-                height: '100%',
-                padding: '3rem',
-                background: 'white',
-                color: '#1e293b',
-                overflowY: 'auto',
-                outline: 'none',
-                fontFamily: 'Helvetica, Arial, sans-serif',
-                fontSize: '14px',
-                lineHeight: '1.6',
-                boxShadow: '0 0 20px rgba(0,0,0,0.2)'
-            }}
-        />
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+            {/* TOOLBAR */}
+            <div style={{
+                display: 'flex', gap: '8px', padding: '8px', borderBottom: '1px solid #ddd', background: '#f8f9fa', alignItems: 'center', flexWrap: 'wrap'
+            }}>
+                <button onClick={() => execCmd('bold')} style={getBtnStyle(activeFormats.bold)} title="Bold"><b>B</b></button>
+                <button onClick={() => execCmd('italic')} style={getBtnStyle(activeFormats.italic)} title="Italic"><i>I</i></button>
+                <button onClick={() => execCmd('underline')} style={getBtnStyle(activeFormats.underline)} title="Underline"><u>U</u></button>
+
+                <div style={{ width: '1px', height: '20px', background: '#ccc', margin: '0 4px' }} />
+
+                <select onChange={(e) => execCmd('fontName', e.target.value)} style={selectStyle} defaultValue="Arial">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                </select>
+
+                <select onChange={(e) => execCmd('fontSize', e.target.value)} style={selectStyle} defaultValue="3">
+                    <option value="1">Tiny (1)</option>
+                    <option value="2">Small (2)</option>
+                    <option value="3">Normal (3)</option>
+                    <option value="4">Medium (4)</option>
+                    <option value="5">Large (5)</option>
+                    <option value="6">X-Large (6)</option>
+                    <option value="7">Huge (7)</option>
+                </select>
+
+                <div style={{ width: '1px', height: '20px', background: '#ccc', margin: '0 4px' }} />
+
+                <button onClick={() => execCmd('justifyLeft')} style={getBtnStyle(activeFormats.justifyLeft)} title="Align Left">⬅️</button>
+                <button onClick={() => execCmd('justifyCenter')} style={getBtnStyle(activeFormats.justifyCenter)} title="Align Center">⬇️</button>
+                <button onClick={() => execCmd('justifyRight')} style={getBtnStyle(activeFormats.justifyRight)} title="Align Right">➡️</button>
+            </div>
+
+            {/* EDITOR */}
+            <div
+                ref={editorRef}
+                className="document-editor"
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleInput}
+                onKeyUp={checkActiveFormats}
+                onMouseUp={checkActiveFormats}
+                style={{
+                    flex: 1,
+                    padding: '3rem',
+                    color: '#1e293b',
+                    overflowY: 'auto',
+                    outline: 'none',
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: '14px',
+                    lineHeight: '1.6',
+                    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.02)'
+                }}
+            />
+        </div>
     );
 };
 
+const btnStyle = {
+    padding: '6px 10px', background: 'white', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', minWidth: '32px'
+};
 
+const selectStyle = {
+    padding: '6px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none', cursor: 'pointer'
+};
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
@@ -320,9 +399,11 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         }}
                     >
                         <option>Offer Letter</option>
+                        <option>Internship Letter</option>
                         <option>Appraisal Letter</option>
                         <option>Experience Letter</option>
                         <option>Relieving Letter</option>
+                        <option>Others</option>
                     </select>
 
                     <select

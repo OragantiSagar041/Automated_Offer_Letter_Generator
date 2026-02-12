@@ -78,18 +78,73 @@ def create_employee(employee: schemas.EmployeeCreate, db: Session = Depends(data
     db.add(new_payroll)
     db.commit()
 
+    # Populate fields for schema response
+    new_employee.ctc = ctc
+    new_employee.basic_salary = round(basic_calculated, 2)
+
     return new_employee
 
 @router.get("/", response_model=List[schemas.Employee])
 def read_employees(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     employees = db.query(models.Employee).offset(skip).limit(limit).all()
+    
+    # Populate payroll info
+    for emp in employees:
+        # Get latest payroll (safest bet: check relationship)
+        # Note: This relys on lazy loading 'payrolls'
+        payrolls = emp.payrolls
+        if payrolls:
+            # Sort by ID descending to get latest
+            latest = sorted(payrolls, key=lambda x: x.id, reverse=True)[0]
+            emp.ctc = latest.net_salary
+            emp.basic_salary = latest.basic_salary
+        else:
+            emp.ctc = 0.0
+            emp.basic_salary = 0.0
+            
     return employees
+
+@router.get("/template")
+def download_template():
+    """
+    Download Excel Template for Bulk Import.
+    """
+    # Create DataFrame with headers only. Matching the fields in Add Employee Modal.
+    headers = [
+        "Employee ID", "Full Name", "Email Address", "Designation", 
+        "Department", "Joining Date", "Location", "Employment Type", 
+        "Annual CTC", "Basic Salary"
+    ]
+    df = pd.DataFrame(columns=headers)
+    
+    # Create Excel buffer
+    stream = io.BytesIO()
+    # Use openpyxl engine for xlsx
+    df.to_excel(stream, index=False, engine='openpyxl')
+    stream.seek(0)
+    
+    return StreamingResponse(
+        stream, 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+        headers={"Content-Disposition": "attachment; filename=Employee_Import_Template.xlsx"}
+    )
 
 @router.get("/{employee_id}", response_model=schemas.Employee)
 def read_employee(employee_id: int, db: Session = Depends(database.get_db)):
     employee = db.query(models.Employee).filter(models.Employee.id == employee_id).first()
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Populate payroll info
+    payrolls = employee.payrolls
+    if payrolls:
+        latest = sorted(payrolls, key=lambda x: x.id, reverse=True)[0]
+        employee.ctc = latest.net_salary
+        employee.basic_salary = latest.basic_salary
+    else:
+        employee.ctc = 0.0
+        employee.basic_salary = 0.0
+        
     return employee
 
 @router.delete("/{employee_id}", status_code=204)
@@ -147,12 +202,24 @@ def update_employee(employee_id: int, employee_update: schemas.EmployeeCreate, d
     db.refresh(db_employee)
     db.commit()
     db.refresh(db_employee)
+    
+    # Re-fetch payroll for response
+    # Or just populate what we know if we updated it
+    payrolls = db_employee.payrolls
+    if payrolls:
+        latest = sorted(payrolls, key=lambda x: x.id, reverse=True)[0]
+        db_employee.ctc = latest.net_salary
+        db_employee.basic_salary = latest.basic_salary
+    
     return db_employee
 
 import pandas as pd
 from fastapi import UploadFile, File
+from fastapi.responses import StreamingResponse
 import io
 from datetime import datetime
+
+
 
 @router.post("/upload")
 async def upload_employees_bulk(file: UploadFile = File(...), db: Session = Depends(database.get_db)):

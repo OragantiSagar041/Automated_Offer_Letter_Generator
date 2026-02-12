@@ -19,6 +19,8 @@ class EmployeeCreate(EmployeeBase):
 class Employee(EmployeeBase):
     id: int
     status: Optional[str] = "Pending"
+    ctc: Optional[float] = 0.0
+    basic_salary: Optional[float] = 0.0
 
     class Config:
         from_attributes = True

@@ -1,46 +1,77 @@
 :root {
-  font-family: 'Inter', system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 500;
 
-  /* --- LIGHT MODE VARIABLES --- */
+  /* --- LIGHT MODE (Clean & Airy) --- */
   --bg-primary: #f8fafc;
+  /* Very light blue-grey */
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
   --text-primary: #0f172a;
+  /* Slate 900 */
   --text-secondary: #475569;
+  /* Slate 600 */
   --text-muted: #94a3b8;
+  /* Slate 400 */
   --border-color: #e2e8f0;
-  --accent-color: #6366f1;
-  --accent-hover: #4f46e5;
+
+  /* Rich Gradient Accents */
+  --accent-color: #4f46e5;
+  /* Indigo 600 */
+  --accent-hover: #4338ca;
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
   --card-bg: #ffffff;
-  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --modal-overlay: rgba(0, 0, 0, 0.3);
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  --modal-overlay: rgba(15, 23, 42, 0.4);
+  /* Slate with opacity */
+  --glass-border: rgba(255, 255, 255, 0.5);
+
   --success-bg: #dcfce7;
-  --success-text: #166534;
+  --success-text: #15803d;
   --pending-bg: #fef9c3;
   --pending-text: #854d0e;
 }
 
-/* Specific selector for html[data-theme='dark'] to ensure precedence */
+/* --- DARK MODE (Deep Space & Neon) --- */
 html[data-theme='dark'],
 [data-theme='dark'] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #020617;
+  --bg-primary: #030712;
+  /* Gray 950 (Deepest) */
+  --bg-secondary: #0f172a;
+  /* Gray 900 */
   --bg-tertiary: #1e293b;
-  --text-primary: #f1f5f9;
+  /* Gray 800 */
+  --text-primary: #f8fafc;
+  /* Gray 50 */
   --text-secondary: #cbd5e1;
+  /* Gray 300 */
   --text-muted: #64748b;
-  --border-color: #334155;
+  /* Gray 500 */
+  --border-color: #1e293b;
+  /* Gray 800 */
+
+  /* Neon Accents */
   --accent-color: #818cf8;
+  /* Indigo 400 */
   --accent-hover: #6366f1;
-  --card-bg: #1e293b;
-  --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --modal-overlay: rgba(0, 0, 0, 0.8);
+  --accent-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+
+  --card-bg: #111827;
+  /* Gray 900 */
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --card-hover-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+  --modal-overlay: rgba(0, 0, 0, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.05);
+
   --success-bg: #064e3b;
-  --success-text: #34d399;
-  --pending-bg: #334155;
-  --pending-text: #facc15;
+  --success-text: #4ade80;
+  --pending-bg: #422006;
+  --pending-text: #fde047;
 }
 
 * {

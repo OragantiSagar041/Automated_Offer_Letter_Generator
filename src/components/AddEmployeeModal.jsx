@@ -67,6 +67,10 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
     </div>
 );
 
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8000'
+    : 'https://automated-offer-letter-generator.onrender.com';
+
 const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState(() => {
         if (initialData) {
@@ -150,6 +154,20 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                     <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1rem', fontWeight: '500' }}>
                         {initialData ? 'Refine details for high-performance offer letters.' : 'Empower your team with a new enterprise member.'}
                     </p>
+                </div>
+
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <button
+                        type="button"
+                        onClick={() => window.open(`${API_URL}/employees/template`, '_blank')}
+                        style={{
+                            background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)',
+                            padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
+                            display: 'inline-flex', alignItems: 'center', gap: '8px'
+                        }}
+                    >
+                        📥 Download Bulk Import Template
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2.5rem' }}>

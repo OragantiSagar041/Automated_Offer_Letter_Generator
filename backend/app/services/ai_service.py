@@ -72,7 +72,7 @@ class AIService:
         """
         company = data.get('company_name', 'Arah Infotech Pvt Ltd')
         
-        if "offer" in letter_type.lower():
+        if "offer" in letter_type.lower() or "internship" in letter_type.lower():
             # Check if intern (CTC is 0)
             ctc_val = str(data.get('ctc', '0')).replace(',', '').replace('INR', '').strip()
             try:
@@ -249,7 +249,48 @@ HR Manager
 """
         
         else:
-            return f"Dear {data.get('name')}, This is a formal letter regarding your {letter_type}."
+            return f"""
+    <div style="font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; border-bottom: 2px solid #0056b3; padding-bottom: 20px; margin-bottom: 20px;">
+            <h1 style="color: #0056b3; margin: 0;">{company}</h1>
+            <p style="margin: 5px 0; color: #666;">123, Tech Park, Innovation City, India</p>
+            <p style="margin: 0; color: #666;">contact@company.com</p>
+        </div>
+
+        <div class="date-row" style="text-align: right; font-weight: bold; margin-bottom: 20px;">
+            <span>Date: {data.get('current_date')}</span>
+        </div>
+
+        <p>To,<br>
+        <strong>{data.get('name')}</strong><br>
+        {data.get('department')}</p>
+
+        <h3 style="color: #333; text-decoration: underline;">Subject: {letter_type}</h3>
+
+        <p>Dear <strong>{data.get('name')}</strong>,</p>
+
+        <p>This is a formal letter regarding <strong>{letter_type}</strong> issued by {company}.</p>
+
+        <p>Please find the details below:</p>
+        
+        <br><br>
+        <p><i>[Content regarding {letter_type} to be inserted here...]</i></p>
+        <br><br>
+
+        <p>We appreciate your association with us.</p>
+
+        <div class="signature-block" style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="text-align: left;">
+                <p>For {company},</p>
+            </div>
+            
+            <div style="text-align: left; width: 200px;">
+                <p style="border-top: 1px solid #333; padding-top: 5px; margin: 0;">Authorized Signatory</p>
+                <p style="font-weight: bold; margin: 5px 0 0 0;">HR Manager</p>
+            </div>
+        </div>
+    </div>
+"""
 
 
 # Singleton instance
