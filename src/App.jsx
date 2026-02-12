@@ -179,6 +179,24 @@ function App() {
     pending: employees.length - employees.filter(e => e.status === 'Offer Sent').length
   };
 
+  const selectedBg = theme === 'dark' ? 'rgba(30, 41, 59, 0.8)' : '#f1f5f9';
+  const unselectedBg = 'var(--card-bg)';
+
+  const handleSelectAll = () => {
+    const allFilteredIds = filteredEmployees.map(e => e.id);
+    const allSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedIds.has(id));
+
+    if (allSelected) {
+      const newSet = new Set(selectedIds);
+      allFilteredIds.forEach(id => newSet.delete(id));
+      setSelectedIds(newSet);
+    } else {
+      const newSet = new Set(selectedIds);
+      allFilteredIds.forEach(id => newSet.add(id));
+      setSelectedIds(newSet);
+    }
+  };
+
   return (
     <div className="container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
 
@@ -405,6 +423,29 @@ function App() {
               <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
             </div>
 
+
+
+            <button
+              onClick={handleSelectAll}
+              style={{
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                padding: '12px 18px',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+              title="Select All Visible"
+            >
+              <span>{filteredEmployees.length > 0 && filteredEmployees.every(e => selectedIds.has(e.id)) ? '☐ Deselect All' : '☑ Select All'}</span>
+            </button>
+
             <button
               onClick={() => { setSelectedEmployeeForEdit(null); setIsModalOpen(true); }} // Changed to setIsModalOpen(true) as per original logic
               style={{
@@ -495,147 +536,149 @@ function App() {
       </div>
 
       {/* --- EMPLOYEE LIST --- */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '6rem' }}>
-          <div className="spinner" style={{ width: '60px', height: '60px', border: '6px solid var(--border-color)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 2rem' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', fontWeight: 600 }}>Connecting to enterprise grid...</p>
-        </div>
-      ) : filteredEmployees.length === 0 ? (
-        <div style={{ background: 'var(--bg-secondary)', padding: '6rem', borderRadius: '30px', textAlign: 'center', border: '2px dashed var(--border-color)' }}>
-          <p style={{ fontSize: '1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>No candidates match your criteria.</p>
-        </div>
-      ) : (
-        <div style={{
-          display: viewMode === 'grid' ? 'grid' : 'flex',
-          gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(350px, 1fr))' : 'none',
-          flexDirection: 'column',
-          gap: '1.5rem'
-        }}>
-          {filteredEmployees.map(emp => (
-            viewMode === 'grid' ? (
-              // --- GRID ITEM ---
-              <motion.div
-                key={emp.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ y: -8, boxShadow: 'var(--card-hover-shadow)' }}
-                style={{
-                  position: 'relative',
-                  background: 'var(--card-bg)',
-                  padding: '2rem',
-                  borderRadius: '24px',
-                  border: selectedIds.has(emp.id) ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
-                  boxShadow: 'var(--card-shadow)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1.5rem',
-                  transition: 'border 0.2s ease',
-                  height: '100%',
-                  backdropFilter: 'blur(12px)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      {
+        loading ? (
+          <div style={{ textAlign: 'center', padding: '6rem' }}>
+            <div className="spinner" style={{ width: '60px', height: '60px', border: '6px solid var(--border-color)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 2rem' }} />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', fontWeight: 600 }}>Connecting to enterprise grid...</p>
+          </div>
+        ) : filteredEmployees.length === 0 ? (
+          <div style={{ background: 'var(--bg-secondary)', padding: '6rem', borderRadius: '30px', textAlign: 'center', border: '2px dashed var(--border-color)' }}>
+            <p style={{ fontSize: '1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>No candidates match your criteria.</p>
+          </div>
+        ) : (
+          <div style={{
+            display: viewMode === 'grid' ? 'grid' : 'flex',
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(350px, 1fr))' : 'none',
+            flexDirection: 'column',
+            gap: '1.5rem'
+          }}>
+            {filteredEmployees.map(emp => (
+              viewMode === 'grid' ? (
+                // --- GRID ITEM ---
+                <motion.div
+                  key={emp.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ y: -8, boxShadow: 'var(--card-hover-shadow)' }}
+                  style={{
+                    position: 'relative',
+                    background: selectedIds.has(emp.id) ? selectedBg : unselectedBg,
+                    padding: '2rem',
+                    borderRadius: '24px',
+                    border: selectedIds.has(emp.id) ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                    boxShadow: 'var(--card-shadow)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.5rem',
+                    transition: 'border 0.2s ease, background-color 0.2s ease',
+                    height: '100%',
+                    backdropFilter: 'blur(12px)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(emp.id)}
+                        onChange={() => toggleSelection(emp.id)}
+                        style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
+                      />
+                      <div>
+                        <h3 style={{ margin: '0 0 5px 0', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', paddingRight: '60px' }}>{emp.name}</h3>
+                        <p style={{ margin: 0, color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{emp.designation}</p>
+                      </div>
+                    </div>
+                    {/* MOVED TO CORNER (As per TC_007) */}
+                    <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
+                      <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700 }}>{emp.department}</span>
+                    {emp.status === 'Offer Sent' && <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>✅ DISPATCHED</span>}
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedEmployee(emp)}
+                    style={{
+                      marginTop: 'auto', // Pushes button to bottom
+                      width: '100%',
+                      background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
+                      border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
+                      color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
+                      padding: '16px', borderRadius: '15px', fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s',
+                      boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 15px rgba(99, 102, 241, 0.4)'
+                    }}
+                  >
+                    {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'GENERATE OFFER'}
+                  </button>
+                </motion.div>
+              ) : (
+                // --- LIST ITEM ---
+                <motion.div
+                  key={emp.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.005, backgroundColor: 'var(--bg-tertiary)' }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: selectedIds.has(emp.id) ? selectedBg : unselectedBg,
+                    padding: '1.25rem 2rem',
+                    borderRadius: '16px',
+                    border: selectedIds.has(emp.id) ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+                    gap: '1rem',
+                    transition: 'background 0.2s ease, border 0.2s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2 }}>
                     <input
                       type="checkbox"
                       checked={selectedIds.has(emp.id)}
                       onChange={() => toggleSelection(emp.id)}
-                      style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
                     />
                     <div>
-                      <h3 style={{ margin: '0 0 5px 0', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', paddingRight: '60px' }}>{emp.name}</h3>
-                      <p style={{ margin: 0, color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{emp.designation}</p>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{emp.name}</h3>
+                      <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{emp.designation}</p>
                     </div>
                   </div>
-                  {/* MOVED TO CORNER (As per TC_007) */}
-                  <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
-                    <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
+
+                  <div style={{ flex: 1, color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem' }}>
+                    {emp.department}
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700 }}>{emp.department}</span>
-                  {emp.status === 'Offer Sent' && <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>✅ DISPATCHED</span>}
-                </div>
-
-                <button
-                  onClick={() => setSelectedEmployee(emp)}
-                  style={{
-                    marginTop: 'auto', // Pushes button to bottom
-                    width: '100%',
-                    background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
-                    border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
-                    color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
-                    padding: '16px', borderRadius: '15px', fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 15px rgba(99, 102, 241, 0.4)'
-                  }}
-                >
-                  {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'GENERATE OFFER'}
-                </button>
-              </motion.div>
-            ) : (
-              // --- LIST ITEM ---
-              <motion.div
-                key={emp.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.005, backgroundColor: 'var(--bg-tertiary)' }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: 'var(--card-bg)',
-                  padding: '1.25rem 2rem',
-                  borderRadius: '16px',
-                  border: selectedIds.has(emp.id) ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                  gap: '1rem',
-                  transition: 'background 0.2s ease, border 0.2s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2 }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(emp.id)}
-                    onChange={() => toggleSelection(emp.id)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--accent-color)' }}
-                  />
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{emp.name}</h3>
-                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{emp.designation}</p>
+                  <div style={{ flex: 1 }}>
+                    {emp.status === 'Offer Sent' ? (
+                      <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>✅ SENT</span>
+                    ) : (
+                      <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>PENDING</span>
+                    )}
                   </div>
-                </div>
 
-                <div style={{ flex: 1, color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem' }}>
-                  {emp.department}
-                </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
+                    <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
+                  </div>
 
-                <div style={{ flex: 1 }}>
-                  {emp.status === 'Offer Sent' ? (
-                    <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>✅ SENT</span>
-                  ) : (
-                    <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>PENDING</span>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
-                  <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
-                </div>
-
-                <button
-                  onClick={() => setSelectedEmployee(emp)}
-                  style={{
-                    background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
-                    border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
-                    color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
-                    padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer',
-                    minWidth: '140px',
-                    boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 10px rgba(99, 102, 241, 0.3)'
-                  }}
-                >
-                  {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'Generate'}
-                </button>
-              </motion.div>
-            )
-          ))}
-        </div>
-      )}
+                  <button
+                    onClick={() => setSelectedEmployee(emp)}
+                    style={{
+                      background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
+                      border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
+                      color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
+                      padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer',
+                      minWidth: '140px',
+                      boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 10px rgba(99, 102, 241, 0.3)'
+                    }}
+                  >
+                    {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'Generate'}
+                  </button>
+                </motion.div>
+              )
+            ))}
+          </div>
+        )
+      }
 
       {
         importMsg && (
