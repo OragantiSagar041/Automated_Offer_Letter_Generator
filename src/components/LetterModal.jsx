@@ -199,39 +199,49 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     useEffect(() => {
         // If the selected template is a KNOWN one, switch the company name automatically.
         // If it's a custom one (not in map), we leave the current company name (or user can edit it).
+        console.log("Template switched:", selectedTemplate);
         if (COMPANY_NAMES[selectedTemplate]) {
+            console.log("Setting company name to:", COMPANY_NAMES[selectedTemplate]);
             setCompanyName(COMPANY_NAMES[selectedTemplate]);
         }
     }, [selectedTemplate]);
 
     useEffect(() => {
-        const prevCompany = COMPANY_NAMES[prevTemplateRef.current] || 'Arah Infotech Pvt Ltd'; // Fallback for prev
-
         // Update Email Body
-        setEmailBody(
+        // Use functional update or just current state since we are in useEffect [companyName]
+        setEmailBody(prev =>
             `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${companyName}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
         );
 
-        // Update Generated HTML Content if it exists
-        const currentContent = contentRef.current;
-        if (currentContent) {
-            // Escape special chars for regex: . * + ? ^ $ { } ( ) | [ ] \
-            const escapedPrev = prevCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedPrev, 'g');
-            const newContent = currentContent.replace(regex, companyName);
+        // Update Generated HTML Content to reflect new Company Name
+        if (generatedContent) {
+            let newContent = generatedContent;
 
-            if (newContent !== currentContent) {
+            // Iterate over all known company names and replace them if found
+            // This ensures even if we switched from A to B to C, we catch the name
+            Object.values(COMPANY_NAMES).forEach(name => {
+                if (name !== companyName) { // Don't replace self with self (though regex would handle it)
+                    // Escape special chars for regex
+                    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    // Case insensitive global replacement? Or just case sensitive?
+                    // Usually company names are proper nouns. Let's use 'g'
+                    const regex = new RegExp(escapedName, 'g');
+                    newContent = newContent.replace(regex, companyName);
+                }
+            });
+
+            if (newContent !== generatedContent) {
+                console.log("Updated content with new company name.");
                 setGeneratedContent(newContent);
-                // Updating generatedContent will trigger the debounced effect below
-            } else if (viewMode === 'pdf') {
-                // If text didn't change (e.g. regex didn't match), we MUST refresh PDF to show new background/header
-                // We call this directly because setGeneratedContent wasn't called, so the debounce effect won't run.
-                generatePreview(currentContent);
+            } else {
+                // Even if text didn't change, we might need to regenerate PDF because the *Template Background* changed check `viewMode`
+                if (viewMode === 'pdf') {
+                    // Force preview update with current content (which might be unchanged text, but new background via selectedTemplate state used in generatePreview)
+                    generatePreview(generatedContent);
+                }
             }
         }
-
-        prevTemplateRef.current = selectedTemplate;
-    }, [companyName, employee.name, selectedTemplate]);
+    }, [companyName, employee.name]); // removed selectedTemplate dependency to avoid double trigger, companyName change drives this
 
     // Auto-Preview when generatedContent changes
     useEffect(() => {
@@ -416,8 +426,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     >
                         <option value="/Arah_Template.pdf">Arah Infotech</option>
                         <option value="/UPlife.pdf">UPlife</option>
-                        <option value="/Vagerious.pdf">Vagerious</option>
-                        <option value="/Zero7_A4.jpg">Zero7 (Image Version)</option>
+                        <option value="/Vagerious.pdf">Vagarious</option>
+                        <option value="/Zero7_A4.jpg">Zero7</option>
                     </select>
 
                     <input type="file" accept="application/pdf" ref={fileInputRef} style={{ display: 'none' }} onChange={handleCustomTemplateUpload} />

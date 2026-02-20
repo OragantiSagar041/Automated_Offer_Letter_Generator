@@ -13,3 +13,5 @@ requests
 pandas
 openpyxl
 pymupdf
+pymongo[srv]
+dnspython

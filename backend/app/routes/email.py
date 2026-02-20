@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from .. import database
-from ..models import models
 from ..services.email_service import email_client
+from bson import ObjectId
 
 router = APIRouter(
     prefix="/email",
@@ -14,16 +13,20 @@ from typing import Optional
 import base64
 
 class EmailRequest(BaseModel):
-    employee_id: int
+    employee_id: str
     letter_content: str
     pdf_base64: Optional[str] = None
     custom_message: Optional[str] = None
     company_name: Optional[str] = "Arah Infotech Pvt Ltd"
+    subject: Optional[str] = None
 
 @router.post("/send")
-def send_offer_email(request: EmailRequest, db: Session = Depends(database.get_db)):
+def send_offer_email(request: EmailRequest, db = Depends(database.get_db)):
+    if not ObjectId.is_valid(request.employee_id):
+        raise HTTPException(status_code=400, detail="Invalid ObjectId")
+
     # 1. Fetch Employee
-    employee = db.query(models.Employee).filter(models.Employee.id == request.employee_id).first()
+    employee = db.employees.find_one({"_id": ObjectId(request.employee_id)})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 
@@ -37,18 +40,20 @@ def send_offer_email(request: EmailRequest, db: Session = Depends(database.get_d
 
     # 2. Send Email (Backend Process)
     result = email_client.send_offer_letter(
-        recipient_email=employee.email,
-        candidate_name=employee.name,
+        recipient_email=employee.get("email"),
+        candidate_name=employee.get("name"),
         letter_content=request.letter_content,
         pdf_content=pdf_bytes,
         email_body=request.custom_message,
-        subject=getattr(request, 'subject', None), # Safely get subject
+        subject=request.subject, 
         company_name=request.company_name
     )
     
     # 3. Update Status if Sent
     if result.get("status") == "success":
-        employee.status = "Offer Sent"
-        db.commit()
+        db.employees.update_one(
+            {"_id": ObjectId(request.employee_id)},
+            {"$set": {"status": "Offer Sent"}}
+        )
     
     return result

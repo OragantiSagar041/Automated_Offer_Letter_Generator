@@ -58,7 +58,8 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
                     fontSize: '1rem',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    cursor: disabled ? 'not-allowed' : 'text'
+                    cursor: disabled ? 'not-allowed' : 'text',
+                    colorScheme: 'dark' // Ensures calendar icon is light in dark mode
                 }}
                 onFocus={(e) => { if (!disabled) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
                 onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}

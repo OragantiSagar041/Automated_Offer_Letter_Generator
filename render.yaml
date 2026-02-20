@@ -1,0 +1,32 @@
+services:
+  # Backend Service
+  - type: web
+    name: auto-offer-letter-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: MANGO_DB_URL
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+
+  # Frontend Service (Static Site)
+  - type: web
+    name: auto-offer-letter-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview -- --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      # You might need to set the API URL here if it's dynamic, 
+      # but usually frontend builds burn it in or load it from window.location generic logic.
