@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from .routes import employee, letter, email, upload
+from . import database
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
@@ -13,10 +14,28 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Auto Office Letter Generator")
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
+
 @app.get("/")
 @app.get("/health")
-def health():
-    return {"status": "running", "message": "API is live"}
+def health(db = Depends(database.get_db)):
+    try:
+        # Ping the database to check connectivity
+        db.command("ping")
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        
+    return {
+        "status": "running", 
+        "message": "API is live",
+        "database": db_status
+    }
 
 # Configure CORS
 app.add_middleware(
