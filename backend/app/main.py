@@ -13,6 +13,36 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Auto Office Letter Generator")
 
+@app.get("/")
+@app.get("/health")
+def health():
+    return {"status": "running", "message": "API is live"}
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include Routers
+app.include_router(employee.router)
+app.include_router(letter.router)
+app.include_router(email.router)
+app.include_router(upload.router)
+
+# Static Files - Moved to /static to avoid root collisions
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+
+if not os.path.exists(PUBLIC_DIR):
+    os.makedirs(PUBLIC_DIR)
+
+# Mount static files AFTER all other routes so API takes precedence
+app.mount("/", StaticFiles(directory=PUBLIC_DIR), name="public")
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"Validation Error: {exc.errors()}")
@@ -22,31 +52,3 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=422,
         content={"detail": exc.errors(), "body": body.decode()},
     )
-
-# Configure CORS - Nuclear option for testing: Allow everything
-# Note: allow_origins=["*"] requires allow_credentials=False in FastAPI
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(employee.router)
-app.include_router(letter.router)
-app.include_router(email.router)
-app.include_router(upload.router)
-
-@app.get("/")
-@app.get("/health")
-def health():
-    return {"status": "running", "message": "Welcome to the Auto Office Letter Generator API (MongoDB)"}
-
-# Ensure public dir exists for static files
-PUBLIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "public")
-if not os.path.exists(PUBLIC_DIR):
-    os.makedirs(PUBLIC_DIR)
-
-# Mount static files AFTER all other routes
-app.mount("/", StaticFiles(directory=PUBLIC_DIR), name="public")
