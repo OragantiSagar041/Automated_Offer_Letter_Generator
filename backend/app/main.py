@@ -38,13 +38,15 @@ app.include_router(letter.router)
 app.include_router(email.router)
 app.include_router(upload.router)
 
+@app.get("/")
+@app.get("/health")
+def health():
+    return {"status": "running", "message": "Welcome to the Auto Office Letter Generator API (MongoDB)"}
+
 # Ensure public dir exists for static files
 PUBLIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "public")
 if not os.path.exists(PUBLIC_DIR):
     os.makedirs(PUBLIC_DIR)
 
+# Mount static files AFTER all other routes
 app.mount("/", StaticFiles(directory=PUBLIC_DIR), name="public")
-
-@app.get("/health")
-def health():
-    return {"status": "running", "message": "Welcome to the Auto Office Letter Generator API (MongoDB)"}
