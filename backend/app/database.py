@@ -7,10 +7,14 @@ load_dotenv()
 # Database URL from Env
 MONGO_URL = os.getenv("MANGO_DB_URL") 
 
-# Create MongoDB Client
-client = MongoClient(MONGO_URL)
+# Create MongoDB Client with timeout and TLS settings for robust cloud connectivity
+client = MongoClient(
+    MONGO_URL,
+    serverSelectionTimeoutMS=5000,
+    connectTimeoutMS=10000,
+    tls=True
+)
 
-# Database Name (AutoOfferLetterDB)
 db = client.AutoOfferLetterDB
 
 # Dependency
