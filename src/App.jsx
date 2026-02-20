@@ -348,7 +348,7 @@ function App() {
                   background: filterStatus === status ? 'var(--card-bg)' : 'transparent',
                   border: 'none',
                   borderRadius: '12px',
-                  color: filterStatus === status ? 'var(--accent-color)' : 'var(--text-muted)',
+                  color: filterStatus === status ? (status === 'Pending' ? '#FDE047' : 'var(--accent-color)') : 'var(--text-muted)',
                   fontSize: '0.9rem',
                   fontWeight: '700',
                   padding: '10px 24px',
@@ -587,7 +587,7 @@ function App() {
                     {/* MOVED TO CORNER (As per TC_007) */}
                     <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', gap: '8px' }}>
                       <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
-                      <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
+                      <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '8px', fontSize: '0.9rem', transition: 'background 0.2s', color: 'var(--text-secondary)' }} title="Delete">❌</button>
                     </div>
                   </div>
 
@@ -615,7 +615,7 @@ function App() {
                 // --- LIST ITEM ---
                 <motion.div
                   key={emp.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ scale: 1.005, backgroundColor: 'var(--bg-tertiary)' }}
+                  whileHover={{ scale: 1.005, boxShadow: 'var(--card-hover-shadow)' }}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     background: selectedIds.has(emp.id) ? selectedBg : unselectedBg,
@@ -648,13 +648,13 @@ function App() {
                     {emp.status === 'Offer Sent' ? (
                       <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>✅ SENT</span>
                     ) : (
-                      <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>PENDING</span>
+                      <span style={{ background: 'var(--pending-bg)', color: 'var(--pending-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>PENDING</span>
                     )}
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button onClick={() => handleEditEmployee(emp)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
-                    <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Delete">🗑️</button>
+                    <button onClick={() => handleDeleteEmployee(emp.id)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)' }} title="Delete">❌</button>
                   </div>
 
                   <button

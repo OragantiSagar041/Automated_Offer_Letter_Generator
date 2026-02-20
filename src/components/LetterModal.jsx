@@ -63,9 +63,9 @@ const EditableContent = ({ initialContent, onChange }) => {
 
     const getBtnStyle = (isActive) => ({
         padding: '6px 10px',
-        background: isActive ? '#e0e7ff' : 'white', // Light indigo for active
-        border: isActive ? '1px solid var(--accent-color)' : '1px solid #ccc',
-        color: isActive ? 'var(--accent-color)' : '#333',
+        background: isActive ? 'var(--accent-color)' : 'var(--bg-secondary)',
+        border: isActive ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+        color: isActive ? 'white' : 'var(--text-primary)',
         borderRadius: '4px',
         cursor: 'pointer',
         minWidth: '32px',
@@ -77,13 +77,13 @@ const EditableContent = ({ initialContent, onChange }) => {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
             {/* TOOLBAR */}
             <div style={{
-                display: 'flex', gap: '8px', padding: '8px', borderBottom: '1px solid #ddd', background: '#f8f9fa', alignItems: 'center', flexWrap: 'wrap'
+                display: 'flex', gap: '8px', padding: '8px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', alignItems: 'center', flexWrap: 'wrap'
             }}>
                 <button onClick={() => execCmd('bold')} style={getBtnStyle(activeFormats.bold)} title="Bold"><b>B</b></button>
                 <button onClick={() => execCmd('italic')} style={getBtnStyle(activeFormats.italic)} title="Italic"><i>I</i></button>
                 <button onClick={() => execCmd('underline')} style={getBtnStyle(activeFormats.underline)} title="Underline"><u>U</u></button>
 
-                <div style={{ width: '1px', height: '20px', background: '#ccc', margin: '0 4px' }} />
+                <div style={{ width: '1px', height: '20px', background: 'var(--border-color)', margin: '0 4px' }} />
 
                 <select onChange={(e) => execCmd('fontName', e.target.value)} style={selectStyle} defaultValue="Arial">
                     <option value="Arial">Arial</option>
@@ -106,7 +106,7 @@ const EditableContent = ({ initialContent, onChange }) => {
                     <option value="7">Huge (7)</option>
                 </select>
 
-                <div style={{ width: '1px', height: '20px', background: '#ccc', margin: '0 4px' }} />
+                <div style={{ width: '1px', height: '20px', background: 'var(--border-color)', margin: '0 4px' }} />
 
                 <button onClick={() => execCmd('justifyLeft')} style={getBtnStyle(activeFormats.justifyLeft)} title="Align Left">⬅️</button>
                 <button onClick={() => execCmd('justifyCenter')} style={getBtnStyle(activeFormats.justifyCenter)} title="Align Center">⬇️</button>
@@ -143,7 +143,8 @@ const btnStyle = {
 };
 
 const selectStyle = {
-    padding: '6px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none', cursor: 'pointer'
+    padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', outline: 'none', cursor: 'pointer',
+    background: 'var(--bg-secondary)', color: 'var(--text-primary)'
 };
 
 const LetterModal = ({ employee, onClose, onSuccess }) => {

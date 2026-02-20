@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { API_URL } from '../config';
 
-const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null }) => (
+const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null, error = false }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{
             fontSize: '0.8rem',
@@ -53,17 +53,16 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
                     width: '100%',
                     padding: '12px 16px',
                     background: disabled ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
+                    border: error ? '2px solid #ef4444' : '1px solid var(--border-color)',
                     borderRadius: '12px',
                     color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
                     fontSize: '1rem',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    cursor: disabled ? 'not-allowed' : 'text',
-                    colorScheme: 'dark' // Ensures calendar icon is light in dark mode
+                    cursor: disabled ? 'not-allowed' : 'text'
                 }}
-                onFocus={(e) => { if (!disabled) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
-                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+                onFocus={(e) => { if (!disabled && !error) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
+                onBlur={(e) => { if (!error) e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
             />
         )}
     </div>
@@ -96,14 +95,36 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
         };
     });
 
+    const [errors, setErrors] = useState({});
+
     const handleChange = (e) => {
         let { name, value } = e.target;
         if (name === 'joining_date' && value.length > 10) value = '';
+
+        if (['name', 'designation', 'department'].includes(name)) {
+            const hasNumber = /\d/.test(value);
+            setErrors(prev => ({ ...prev, [name]: hasNumber }));
+        }
+
+        if (name === 'email') {
+            const lowerVal = value.toLowerCase();
+            const dotComIndex = lowerVal.indexOf('.com');
+            if (dotComIndex !== -1 && value.length > dotComIndex + 4) {
+                value = value.substring(0, dotComIndex + 4);
+            }
+        }
+
         setFormData({ ...formData, [name]: value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (errors.name || errors.designation || errors.department) {
+            alert("Please remove numbers from Name, Designation, and Department.");
+            return;
+        }
+
         const isIntern = formData.employment_type === 'Internship';
         const payload = {
             ...formData,
@@ -181,7 +202,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                                 <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} />
                             </div>
                             <div style={{ gridColumn: 'span 8' }}>
-                                <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} required />
+                                <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} error={errors.name} required />
                             </div>
                             <div style={{ gridColumn: 'span 8' }}>
                                 <InputGroup label="Email Address" name="email" type="email" placeholder="sarah@corp.com" value={formData.email} onChange={handleChange} required />
@@ -198,8 +219,8 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                             <span style={{ borderBottom: '2px solid #10b981', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                            <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} required />
-                            <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} required />
+                            <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required />
+                            <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} error={errors.department} required />
                             <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} />
                             <InputGroup label="Location" name="location" placeholder="e.g. Bangalore, Remote" value={formData.location} onChange={handleChange} required />
                         </div>

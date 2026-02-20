@@ -2,6 +2,7 @@
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   line-height: 1.6;
   font-weight: 500;
+  color-scheme: light;
 
   /* --- LIGHT MODE (Clean & Airy) --- */
   --bg-primary: #f8fafc;
@@ -39,6 +40,7 @@
 /* --- DARK MODE (Deep Space & Neon) --- */
 html[data-theme='dark'],
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg-primary: #030712;
   /* Gray 950 (Deepest) */
   --bg-secondary: #0f172a;
