@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { generatePdfWithTemplate } from '../utils/pdfTemplateGenerator';
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:8000'
-    : 'https://automated-offer-letter-generator.onrender.com';
+import { API_URL } from '../config';
 
 const COMPANY_NAMES = {
     '/Arah_Template.pdf': 'Arah Infotech Pvt Ltd',

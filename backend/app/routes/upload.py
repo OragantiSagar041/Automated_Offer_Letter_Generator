@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Request
 import shutil
 import os
 from pathlib import Path
@@ -17,7 +17,7 @@ PUBLIC_DIR = BASE_DIR / "public"
 import fitz # PyMuPDF
 
 @router.post("/template-image")
-async def upload_template_image(file: UploadFile = File(...)):
+async def upload_template_image(request: Request, file: UploadFile = File(...)):
     """
     Uploads a JPG/PNG template image directly to the frontend's public folder.
     """
@@ -35,13 +35,14 @@ async def upload_template_image(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        return {"filename": file.filename, "path": str(file_path), "status": "success", "url": f"/{file.filename}"}
+        base_url = str(request.base_url).rstrip("/")
+        return {"filename": file.filename, "path": str(file_path), "status": "success", "url": f"{base_url}/{file.filename}"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/template-pdf")
-async def upload_template_pdf(file: UploadFile = File(...)):
+async def upload_template_pdf(request: Request, file: UploadFile = File(...)):
     """
     Uploads a PDF, converts the first page to a high-quality JPG, and saves it to public folder.
     Returns the URL of the generated image.
@@ -74,7 +75,8 @@ async def upload_template_pdf(file: UploadFile = File(...)):
         if os.path.exists(temp_pdf_path):
             os.remove(temp_pdf_path)
             
-        return {"filename": image_filename, "url": f"/{image_filename}", "status": "success"}
+        base_url = str(request.base_url).rstrip("/")
+        return {"filename": image_filename, "url": f"{base_url}/{image_filename}", "status": "success"}
 
     except Exception as e:
         print(f"Error converting PDF: {e}")

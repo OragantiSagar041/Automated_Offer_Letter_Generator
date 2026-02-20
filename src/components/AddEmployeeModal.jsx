@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { API_URL } from '../config';
 
 const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -67,10 +68,6 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
         )}
     </div>
 );
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:8000'
-    : 'https://automated-offer-letter-generator.onrender.com';
 
 const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState(() => {

@@ -3,10 +3,7 @@ import AddEmployeeModal from './components/AddEmployeeModal';
 import LetterModal from './components/LetterModal';
 import { generatePDFDoc } from './utils/pdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://127.0.0.1:8000'
-  : 'https://automated-offer-letter-generator.onrender.com';
+import { API_URL } from './config';
 
 function App() {
   const [employees, setEmployees] = useState([]);

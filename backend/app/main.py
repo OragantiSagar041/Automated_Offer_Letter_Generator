@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from .routes import employee, letter, email, upload
+from fastapi.staticfiles import StaticFiles
+import os
 import logging
 
 # Set up logging
@@ -39,6 +41,13 @@ app.include_router(letter.router)
 app.include_router(email.router)
 app.include_router(upload.router)
 
-@app.get("/")
-def home():
+# Ensure public dir exists for static files
+PUBLIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "public")
+if not os.path.exists(PUBLIC_DIR):
+    os.makedirs(PUBLIC_DIR)
+
+app.mount("/", StaticFiles(directory=PUBLIC_DIR), name="public")
+
+@app.get("/health")
+def health():
     return {"status": "running", "message": "Welcome to the Auto Office Letter Generator API (MongoDB)"}
