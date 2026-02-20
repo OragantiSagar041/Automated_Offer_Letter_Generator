@@ -23,15 +23,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": exc.errors(), "body": body.decode()},
     )
 
-# Configure CORS so the React Frontend can communicate with this Backend
+# Configure CORS - Nuclear option for testing: Allow everything
+# Note: allow_origins=["*"] requires allow_credentials=False in FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000",
-        "https://automated-offer-letter-generator.vercel.app"
-    ],
-    allow_origin_regex=r"https://.*\.vercel\.app", # Allow all Vercel subdomains
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
