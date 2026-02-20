@@ -28,9 +28,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000",
-        "https://automated-offer-letter-generator-dkkn7mvv5.vercel.app",
         "https://automated-offer-letter-generator.vercel.app"
-    ], 
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app", # Allow all Vercel subdomains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
