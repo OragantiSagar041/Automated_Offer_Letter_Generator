@@ -56,7 +56,7 @@ class EmailService:
             "sender": {"name": f"{company_name} HR", "email": sender_email},
             "to": [{"email": recipient_email, "name": candidate_name}],
             "subject": subject,
-            "htmlContent": body.replace('\n', '<br>') # Brevo uses htmlContent
+            "htmlContent": body # Brevo uses htmlContent
         }
         
         if pdf_content:
@@ -92,24 +92,33 @@ class EmailService:
         """
         Sends an email with the offer letter.
         """
-        # Define Body
-        if email_body:
-            final_body = email_body
-        else:
-            final_body = f"""
-            Dear {candidate_name},
-
-            Congratulations! We are pleased to offer you a position at {company_name}.
-            
-            Please find the offer letter attached.
-
-            Regards,
-            HR Team
-            """
+        import urllib.parse
         
         # Use provided subject or default
         if not subject:
             subject = f"Offer of Employment - {candidate_name}"
+            
+        # Define Body
+        if email_body:
+            base_html = email_body.replace('\n', '<br>')
+        else:
+            base_html = f"Dear {candidate_name},<br><br>Congratulations! We are pleased to offer you a position at {company_name}.<br><br>Please find the offer letter attached.<br><br>Regards,<br>HR Team"
+            
+        sender_email = self.brevo_sender_email if self.brevo_sender_email else self.sender_email
+        safe_sender = urllib.parse.quote(f'{company_name} HR')
+        safe_subject = urllib.parse.quote(f"Re: {subject}")
+        accept_body = urllib.parse.quote("I Accept Offer")
+        reject_body = urllib.parse.quote("Not Interested")
+        
+        action_buttons = f'''
+        <br><br>
+        <div style="text-align: center; font-family: sans-serif; margin-top: 20px; padding-top: 20px;">
+            <a href="mailto:{sender_email}?subject={safe_subject}&body={accept_body}" style="padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 15px; display: inline-block; border: 1px solid #475569; color: #0f172a;">I Accept Offer</a>
+            <a href="mailto:{sender_email}?subject={safe_subject}&body={reject_body}" style="padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; border: 1px solid #475569; color: #0f172a;">Not Interested</a>
+        </div>
+        '''
+        
+        final_body = base_html + action_buttons
 
         # PRIORITY: Use Brevo API if Key exists
         if self.brevo_api_key:
@@ -118,11 +127,11 @@ class EmailService:
         # FALLBACK: Use Gmail SMTP
         try:
             msg = MIMEMultipart()
-            msg['From'] = self.sender_email
+            msg['From'] = f'"{company_name} HR" <{self.sender_email}>'
             msg['To'] = recipient_email
             msg['Subject'] = subject
 
-            msg.attach(MIMEText(final_body, 'plain'))
+            msg.attach(MIMEText(final_body, 'html'))
             
             # Attach PDF if provided
             if pdf_content:

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import AddEmployeeModal from './components/AddEmployeeModal';
 import LetterModal from './components/LetterModal';
-import { generatePDFDoc } from './utils/pdfGenerator';
+import BulkSendModal from './components/BulkSendModal';
+import { generatePdfWithTemplate } from './utils/pdfTemplateGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from './config';
 
@@ -25,6 +26,7 @@ function App() {
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBulkSending, setIsBulkSending] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkProgress, setBulkProgress] = useState("");
   const [importMsg, setImportMsg] = useState(null);
 
@@ -112,32 +114,44 @@ function App() {
     setSelectedIds(newSet);
   };
 
-  const handleBulkSend = async () => {
-    if (!confirm(`Send Offer Letters to ${selectedIds.size} candidates?`)) return;
+  const handleBulkSendClick = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulkSendStart = async (templateUrl, companyName, letterType) => {
+    setShowBulkModal(false);
     setIsBulkSending(true);
     setBulkProgress(`Starting...`);
     const ids = Array.from(selectedIds);
     let successCount = 0;
+
     for (let i = 0; i < ids.length; i++) {
       const empId = ids[i];
       const emp = employees.find(e => e.id === empId);
       if (!emp) continue;
+
       setBulkProgress(`Sending to ${emp.name} (${i + 1}/${ids.length})...`);
+
       try {
         const genRes = await fetch(`${API_URL}/letters/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             employee_id: emp.id,
-            letter_type: "Offer Letter",
-            tone: "Professional"
+            letter_type: letterType,
+            tone: "Professional",
+            company_name: companyName
           })
         });
         const genData = await genRes.json();
         const content = genData.content;
-        const doc = await generatePDFDoc(content);
-        const pdfBase64 = doc.output('datauristring');
-        const subject = `Offer of Employment - ${emp.name}`;
+
+        // Clean up header for PDF (which has its own logo in background)
+        const contentWithoutHeader = content.replace(/<div style="text-align: center; border-bottom: 2px solid #0056b3;[\s\S]*?<\/div>/i, '');
+
+        const pdfBase64 = await generatePdfWithTemplate(contentWithoutHeader, templateUrl);
+        const subject = `${letterType} - ${emp.name}`;
+
         await fetch(`${API_URL}/email/send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -146,11 +160,14 @@ function App() {
             letter_content: content,
             pdf_base64: pdfBase64,
             subject: subject,
-            custom_message: `Dear ${emp.name},\n\nWe are pleased to offer you a position at Arah Infotech.\nPlease find your offer letter attached.\n\nRegards,\nHR Team`
+            custom_message: `Dear ${emp.name},\n\nWe are pleased to offer you the position at ${companyName}.\nPlease find your detailed letter attached.\n\nRegards,\nHR Team`,
+            company_name: companyName
           })
         });
         successCount++;
-      } catch (err) { console.error(`Failed for ${emp.name}`, err); }
+      } catch (err) {
+        console.error(`Failed for ${emp.name}`, err);
+      }
     }
     setIsBulkSending(false);
     setBulkProgress("");
@@ -468,7 +485,7 @@ function App() {
 
             {selectedIds.size > 0 && (
               <button
-                onClick={handleBulkSend} // Changed to handleBulkSend as per original logic
+                onClick={handleBulkSendClick}
                 style={{
                   background: 'var(--bg-tertiary)',
                   color: 'var(--text-primary)',
@@ -702,6 +719,7 @@ function App() {
 
       {/* MODALS */}
       <AnimatePresence>
+        {showBulkModal && <BulkSendModal selectedCount={selectedIds.size} onClose={() => setShowBulkModal(false)} onStart={handleBulkSendStart} />}
         {isModalOpen && <AddEmployeeModal onClose={() => { setIsModalOpen(false); setSelectedEmployeeForEdit(null); }} onSave={handleSaveEmployee} initialData={selectedEmployeeForEdit} />}
         {selectedEmployee && <LetterModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} onSuccess={() => { setSelectedEmployee(null); fetchEmployees(); }} />}
       </AnimatePresence>
