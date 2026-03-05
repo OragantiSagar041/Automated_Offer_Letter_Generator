@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const COMPANY_NAMES = {
-    '/Arah_Template.pdf': 'Arah Infotech Pvt Ltd',
+    '/Arah_Template.jpg': 'Arah Infotech Pvt Ltd',
     '/UPlife.pdf': 'UP LIFE INDIA PVT LTD',
     '/Vagerious.pdf': 'VAGARIOUS SOLUTIONS PVT LTD',
     '/Zero7_A4.jpg': 'ZERO7 TECHNOLOGIES TRAINING & DEVELOPMENT'
@@ -10,7 +10,7 @@ const COMPANY_NAMES = {
 
 const BulkSendModal = ({ selectedCount, onClose, onStart }) => {
     const [letterType, setLetterType] = useState('Offer Letter');
-    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
+    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.jpg');
     const [companyName, setCompanyName] = useState('Arah Infotech Pvt Ltd');
 
     useEffect(() => {
@@ -55,7 +55,7 @@ const BulkSendModal = ({ selectedCount, onClose, onStart }) => {
                             onChange={(e) => setSelectedTemplate(e.target.value)}
                             style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}
                         >
-                            <option value="/Arah_Template.pdf">Arah Infotech</option>
+                            <option value="/Arah_Template.jpg">Arah Infotech</option>
                             <option value="/UPlife.pdf">UPlife</option>
                             <option value="/Vagerious.pdf">Vagarious</option>
                             <option value="/Zero7_A4.jpg">Zero7</option>

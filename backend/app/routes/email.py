@@ -46,7 +46,8 @@ def send_offer_email(request: EmailRequest, db = Depends(database.get_db)):
         pdf_content=pdf_bytes,
         email_body=request.custom_message,
         subject=request.subject, 
-        company_name=request.company_name
+        company_name=request.company_name,
+        employee_id=request.employee_id
     )
     
     # 3. Update Status if Sent

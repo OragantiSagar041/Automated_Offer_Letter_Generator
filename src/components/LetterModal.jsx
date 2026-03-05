@@ -4,7 +4,7 @@ import { generatePdfWithTemplate } from '../utils/pdfTemplateGenerator';
 import { API_URL } from '../config';
 
 const COMPANY_NAMES = {
-    '/Arah_Template.pdf': 'Arah Infotech Pvt Ltd',
+    '/Arah_Template.jpg': 'Arah Infotech Pvt Ltd',
     '/UPlife.pdf': 'UP LIFE INDIA PVT LTD',
     '/Vagerious.pdf': 'VAGARIOUS SOLUTIONS PVT LTD',
     '/Zero7_A4.jpg': 'ZERO7 TECHNOLOGIES TRAINING & DEVELOPMENT'
@@ -153,10 +153,11 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [viewMode, setViewMode] = useState('pdf');
 
-    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
+    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.jpg');
     const [companyName, setCompanyName] = useState('Arah Infotech Pvt Ltd');
 
     const prevTemplateRef = React.useRef(selectedTemplate);
+    const prevCompanyNameRef = React.useRef(companyName);
     const contentRef = React.useRef(generatedContent);
 
     // Keep contentRef in sync
@@ -205,41 +206,52 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     }, [selectedTemplate]);
 
     useEffect(() => {
+        const prevName = prevCompanyNameRef.current;
+        // Update the ref to the new company name for next change
+        prevCompanyNameRef.current = companyName;
+
         // Update Email Body
-        // Use functional update or just current state since we are in useEffect [companyName]
-        setEmailBody(prev =>
+        setEmailBody(
             `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${companyName}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
         );
 
         // Update Generated HTML Content to reflect new Company Name
-        if (generatedContent) {
+        if (generatedContent && prevName !== companyName) {
             let newContent = generatedContent;
 
-            // Iterate over all known company names and replace them if found
-            // This ensures even if we switched from A to B to C, we catch the name
-            Object.values(COMPANY_NAMES).forEach(name => {
-                if (name !== companyName) { // Don't replace self with self (though regex would handle it)
-                    // Escape special chars for regex
-                    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    // Case insensitive global replacement? Or just case sensitive?
-                    // Usually company names are proper nouns. Let's use 'g'
-                    const regex = new RegExp(escapedName, 'g');
-                    newContent = newContent.replace(regex, companyName);
-                }
+            // Build a list of all names to search for: the previous company name + all known names
+            const namesToReplace = new Set();
+            // Always add the previous name so we catch whatever was in the content before
+            if (prevName) namesToReplace.add(prevName);
+            // Also add all known company names to catch any variant
+            Object.values(COMPANY_NAMES).forEach(name => namesToReplace.add(name));
+
+            namesToReplace.forEach(name => {
+                if (name.toLowerCase() === companyName.toLowerCase()) return; // Don't replace self
+                // Escape special chars for regex
+                const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                // Case-insensitive global replacement to catch UPPERCASE, Title Case, etc.
+                const regex = new RegExp(escapedName, 'gi');
+                newContent = newContent.replace(regex, companyName);
             });
 
             if (newContent !== generatedContent) {
-                console.log("Updated content with new company name.");
+                console.log("Updated content with new company name:", companyName);
                 setGeneratedContent(newContent);
             } else {
-                // Even if text didn't change, we might need to regenerate PDF because the *Template Background* changed check `viewMode`
+                // Text didn't change but template background might have changed
                 if (viewMode === 'pdf') {
-                    // Force preview update with current content (which might be unchanged text, but new background via selectedTemplate state used in generatePreview)
                     generatePreview(generatedContent);
                 }
             }
+        } else if (generatedContent && prevName === companyName) {
+            // Company name didn't change but this effect might have been triggered by employee.name
+            // Just regenerate PDF if needed
+            if (viewMode === 'pdf') {
+                generatePreview(generatedContent);
+            }
         }
-    }, [companyName, employee.name]); // removed selectedTemplate dependency to avoid double trigger, companyName change drives this
+    }, [companyName, employee.name]);
 
     // Auto-Preview when generatedContent changes
     useEffect(() => {
@@ -422,7 +434,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
                         }}
                     >
-                        <option value="/Arah_Template.pdf">Arah Infotech</option>
+                        <option value="/Arah_Template.jpg">Arah Infotech</option>
                         <option value="/UPlife.pdf">UPlife</option>
                         <option value="/Vagerious.pdf">Vagarious</option>
                         <option value="/Zero7_A4.jpg">Zero7</option>
@@ -489,7 +501,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     {generatedContent && !loading && (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                             <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between' }}>
-                                <span>📄 PDF Synchronizer (75%)</span>
+                                <span>📄 PDF Synchronizer ({pdfUrl ? '100% ✓' : 'Rendering...'})</span>
                                 {isGeneratingPdf && <span style={{ color: 'var(--accent-color)', animation: 'pulse 1s infinite' }}>● Syncing</span>}
                             </div>
                             <div style={{ flex: 1, background: '#525659', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative' }}>

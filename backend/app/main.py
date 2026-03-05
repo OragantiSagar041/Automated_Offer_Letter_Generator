@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from .routes import employee, letter, email, upload
+from .routes import employee, letter, email, upload, offer_response
 from . import database
 import os
 import logging
@@ -50,6 +50,7 @@ app.include_router(employee.router)
 app.include_router(letter.router)
 app.include_router(email.router)
 app.include_router(upload.router)
+app.include_router(offer_response.router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

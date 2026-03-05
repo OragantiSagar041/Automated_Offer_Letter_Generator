@@ -27,35 +27,55 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
     emp_data = employee.dict()
     ctc = emp_data.pop('ctc')
     basic = emp_data.pop('basic_salary')
+    manual_pt = emp_data.pop('pt', None)  # Monthly PT from frontend
+    manual_pf = emp_data.pop('pf', None)  # Monthly PF from frontend
 
     # Fix: Convert date objects to datetime for MongoDB
-    # MongoDB cannot store 'date' objects directly, only 'datetime'
     if emp_data.get('joining_date') and isinstance(emp_data['joining_date'], date):
         d = emp_data['joining_date']
-        # Check if it's already a datetime (which is a subclass of date), if so, leave it (or ensure encoding)
         if not isinstance(d, datetime):
             emp_data['joining_date'] = datetime(d.year, d.month, d.day)
             print(f"Converted joining_date: {emp_data['joining_date']} (type: {type(emp_data['joining_date'])})")
     
     # Auto-generate emp_id if missing
     if not emp_data.get('emp_id'):
-        # Simple sequence strategy: Count + 1 (Note: Not concurrency safe but okay for MVP)
         count = db.employees.count_documents({})
         emp_data['emp_id'] = f"EMP{count + 1:03d}" 
 
-    # ... (rest of function)
-    # --- Payroll Calculation (Same Logic) ---
-    basic_calculated = ctc * 0.5
-    hra_calculated = basic_calculated * 0.5
-    pf_calculated = basic_calculated * 0.12
-    pt_calculated = 2400 # Annual
-    special_allowance = ctc - (basic_calculated + hra_calculated + pf_calculated)
+    # --- Payroll Calculation (Matching NAVYA.docx format) ---
+    basic_calculated = ctc * 0.40
+    hra_calculated = basic_calculated * 0.40
+    conveyance = min(basic_calculated * 0.267, 1600 * 12)
+    medical_allowance = min(basic_calculated * 0.208, 1250 * 12)
+    special_allowance = ctc - (basic_calculated + hra_calculated + conveyance + medical_allowance)
     
     if special_allowance < 0:
         special_allowance = 0
-        basic_calculated = ctc / 1.62
-        hra_calculated = basic_calculated * 0.5
-        pf_calculated = basic_calculated * 0.12
+
+    gross_monthly = (basic_calculated + hra_calculated + conveyance + medical_allowance + special_allowance) / 12
+    gross_annual = basic_calculated + hra_calculated + conveyance + medical_allowance + special_allowance
+    
+    # PT: Use manual value if provided, otherwise auto-calculate
+    if manual_pt is not None:
+        pt_monthly = manual_pt
+    else:
+        if gross_monthly <= 15000:
+            pt_monthly = 0
+        elif gross_monthly <= 20000:
+            pt_monthly = 150
+        else:
+            pt_monthly = 200
+    pt_annual = pt_monthly * 12
+    
+    # PF: Use manual value if provided, otherwise auto-calculate (12% of basic)
+    if manual_pf is not None:
+        pf_monthly = manual_pf
+        pf_annual = pf_monthly * 12
+    else:
+        pf_annual = basic_calculated * 0.12
+        pf_monthly = pf_annual / 12
+    
+    net_annual = gross_annual - pt_annual - pf_annual
 
     # Construct Document
     new_employee_doc = {
@@ -66,9 +86,15 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
             "ctc": ctc,
             "basic_salary": round(basic_calculated, 2),
             "hra": round(hra_calculated, 2),
+            "conveyance": round(conveyance, 2),
+            "medical_allowance": round(medical_allowance, 2),
+            "special_allowance": round(special_allowance, 2),
             "allowances": round(special_allowance, 2),
-            "deductions": round(pf_calculated + pt_calculated, 2),
-            "net_salary": ctc # Keeping net_salary as CTC for reference as per previous logic
+            "gross_salary": round(gross_annual, 2),
+            "pt": round(pt_annual, 2),
+            "pf": round(pf_annual, 2),
+            "deductions": round(pf_annual + pt_annual, 2),
+            "net_salary": round(net_annual, 2)
         }
     }
     
@@ -140,24 +166,61 @@ def update_employee(employee_id: str, employee_update: schemas.EmployeeCreate, d
 
     update_data = employee_update.dict()
     new_ctc = update_data.pop('ctc', None)
-    update_data.pop('basic_salary', None) # Remove basic_salary from top level
+    update_data.pop('basic_salary', None)
+    manual_pt = update_data.pop('pt', None)
+    manual_pf = update_data.pop('pf', None)
+
+    # Fix: Convert date objects to datetime for MongoDB (BSON doesn't support date)
+    if update_data.get('joining_date') and isinstance(update_data['joining_date'], date):
+        d = update_data['joining_date']
+        if not isinstance(d, datetime):
+            update_data['joining_date'] = datetime(d.year, d.month, d.day)
 
     # Handle Compensation Update if CTC changed
     if new_ctc and new_ctc != existing.get("compensation", {}).get("ctc"):
-        basic = new_ctc * 0.5
-        hra = basic * 0.5
-        pf = basic * 0.12
-        pt = 2400
-        special = new_ctc - (basic + hra + pf)
+        basic = new_ctc * 0.40
+        hra = basic * 0.40
+        conveyance = min(basic * 0.267, 1600 * 12)
+        medical_allowance = min(basic * 0.208, 1250 * 12)
+        special = new_ctc - (basic + hra + conveyance + medical_allowance)
         if special < 0: special = 0
+        
+        gross_monthly = (basic + hra + conveyance + medical_allowance + special) / 12
+        gross_annual = basic + hra + conveyance + medical_allowance + special
+        
+        # PT: Use manual value if provided
+        if manual_pt is not None:
+            pt_monthly = manual_pt
+        else:
+            if gross_monthly <= 15000:
+                pt_monthly = 0
+            elif gross_monthly <= 20000:
+                pt_monthly = 150
+            else:
+                pt_monthly = 200
+        pt_annual = pt_monthly * 12
+        
+        # PF: Use manual value if provided
+        if manual_pf is not None:
+            pf_annual = manual_pf * 12
+        else:
+            pf_annual = basic * 0.12
+        
+        net_annual = gross_annual - pt_annual - pf_annual
         
         update_data["compensation"] = {
             "ctc": new_ctc,
             "basic_salary": round(basic, 2),
             "hra": round(hra, 2),
+            "conveyance": round(conveyance, 2),
+            "medical_allowance": round(medical_allowance, 2),
+            "special_allowance": round(special, 2),
             "allowances": round(special, 2),
-            "deductions": round(pf + pt, 2),
-            "net_salary": new_ctc
+            "gross_salary": round(gross_annual, 2),
+            "pt": round(pt_annual, 2),
+            "pf": round(pf_annual, 2),
+            "deductions": round(pf_annual + pt_annual, 2),
+            "net_salary": round(net_annual, 2)
         }
     
     # Perform Update
@@ -237,12 +300,24 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                 ctc_val = row.get(col_ctc, 0)
                 ctc = float(ctc_val) if not pd.isna(ctc_val) else 0
 
-                basic = ctc * 0.5
-                hra = basic * 0.5
+                basic = ctc * 0.40
+                hra = basic * 0.40
+                conveyance = min(basic * 0.267, 1600 * 12)
+                medical_allowance = min(basic * 0.208, 1250 * 12)
                 pf = basic * 0.12
-                pt = 2400
-                special = ctc - (basic + hra + pf)
+                special = ctc - (basic + hra + conveyance + medical_allowance)
                 if special < 0: special = 0
+                
+                gross_monthly = (basic + hra + conveyance + medical_allowance + special) / 12
+                if gross_monthly <= 15000:
+                    pt_monthly = 0
+                elif gross_monthly <= 20000:
+                    pt_monthly = 150
+                else:
+                    pt_monthly = 200
+                pt_annual = pt_monthly * 12
+                gross_annual = basic + hra + conveyance + medical_allowance + special
+                net_annual = gross_annual - pt_annual - pf
 
                 doc = {
                     "emp_id": str(emp_id),
@@ -250,7 +325,7 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                     "email": email,
                     "designation": desg,
                     "department": dept,
-                    "joining_date": j_date, # storing as string for simplicity in bulk, or convert to datetime
+                    "joining_date": j_date,
                     "location": row.get('location', 'Remote'),
                     "employment_type": row.get('employment_type', 'Full Time'),
                     "status": "Pending",
@@ -259,9 +334,15 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                         "ctc": ctc,
                         "basic_salary": round(basic, 2),
                         "hra": round(hra, 2),
+                        "conveyance": round(conveyance, 2),
+                        "medical_allowance": round(medical_allowance, 2),
+                        "special_allowance": round(special, 2),
                         "allowances": round(special, 2),
-                        "deductions": round(pf + pt, 2),
-                        "net_salary": ctc
+                        "gross_salary": round(gross_annual, 2),
+                        "pt": round(pt_annual, 2),
+                        "pf": round(pf, 2),
+                        "deductions": round(pf + pt_annual, 2),
+                        "net_salary": round(net_annual, 2)
                     }
                 }
                 

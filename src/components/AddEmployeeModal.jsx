@@ -41,11 +41,21 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
             </div>
         ) : (
             <input
-                type={type}
+                type={type === 'number' ? 'text' : type}
+                inputMode={type === 'number' ? 'numeric' : undefined}
                 name={name}
                 placeholder={placeholder}
                 value={value}
-                onChange={onChange}
+                onChange={(e) => {
+                    if (type === 'number') {
+                        const val = e.target.value;
+                        if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                            onChange(e);
+                        }
+                    } else {
+                        onChange(e);
+                    }
+                }}
                 disabled={disabled}
                 required={required}
                 autoComplete="off"
@@ -59,10 +69,12 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
                     fontSize: '1rem',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    cursor: disabled ? 'not-allowed' : 'text'
+                    cursor: disabled ? 'not-allowed' : 'text',
+                    MozAppearance: 'textfield'
                 }}
                 onFocus={(e) => { if (!disabled && !error) { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' } }}
                 onBlur={(e) => { if (!error) e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+                onWheel={(e) => e.target.blur()}
             />
         )}
     </div>
@@ -78,7 +90,9 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
             return {
                 ...initialData,
                 employment_type: isIntern ? 'Internship' : 'Full Time',
-                basic_salary: initialData.basic_salary || (initialData.ctc ? (initialData.ctc * 0.5) : '')
+                basic_salary: initialData.basic_salary || (initialData.ctc ? (initialData.ctc * 0.5) : ''),
+                pt: initialData.pt ?? '',
+                pf: initialData.pf ?? ''
             };
         }
         return {
@@ -91,7 +105,9 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
             joining_date: '',
             location: '',
             ctc: '',
-            basic_salary: ''
+            basic_salary: '',
+            pt: '',
+            pf: ''
         };
     });
 
@@ -129,7 +145,9 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
         const payload = {
             ...formData,
             basic_salary: isIntern ? 0 : (formData.basic_salary ? parseFloat(formData.basic_salary) : 0),
-            ctc: isIntern ? 0 : (formData.ctc ? parseFloat(formData.ctc) : 0)
+            ctc: isIntern ? 0 : (formData.ctc ? parseFloat(formData.ctc) : 0),
+            pt: formData.pt !== '' ? parseFloat(formData.pt) : null,
+            pf: formData.pf !== '' ? parseFloat(formData.pf) : null
         };
         onSave(payload);
     };
@@ -238,8 +256,75 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required />
-                                <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} />
+                                <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} required />
                             </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', color: 'var(--text-muted)' }}>
+                                        PT (Monthly) (₹) <span style={{ color: '#ef4444' }}>*</span>
+                                        {formData.ctc && parseFloat(formData.ctc) > 0 && (() => {
+                                            const ctc = parseFloat(formData.ctc) || 0;
+                                            const grossM = ctc / 12;
+                                            const suggested = grossM <= 15000 ? 0 : grossM <= 20000 ? 150 : 200;
+                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Suggested: ₹{suggested}</span>;
+                                        })()}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        name="pt"
+                                        placeholder="Enter PT amount (0 if none)"
+                                        value={formData.pt}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) handleChange(e);
+                                        }}
+                                        required
+                                        autoComplete="off"
+                                        style={{
+                                            width: '100%', padding: '12px 16px', background: 'var(--bg-primary)',
+                                            border: '1px solid var(--border-color)', borderRadius: '12px',
+                                            color: 'var(--text-primary)', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
+                                        }}
+                                        onFocus={(e) => { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' }}
+                                        onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', color: 'var(--text-muted)' }}>
+                                        PF (Monthly) (₹) <span style={{ color: '#ef4444' }}>*</span>
+                                        {formData.ctc && parseFloat(formData.ctc) > 0 && (() => {
+                                            const ctc = parseFloat(formData.ctc) || 0;
+                                            const basic = ctc * 0.40;
+                                            const suggested = Math.round((basic * 0.12) / 12);
+                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Suggested: ₹{suggested}</span>;
+                                        })()}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        name="pf"
+                                        placeholder="Enter PF amount (0 if none)"
+                                        value={formData.pf}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) handleChange(e);
+                                        }}
+                                        required
+                                        autoComplete="off"
+                                        style={{
+                                            width: '100%', padding: '12px 16px', background: 'var(--bg-primary)',
+                                            border: '1px solid var(--border-color)', borderRadius: '12px',
+                                            color: 'var(--text-primary)', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
+                                        }}
+                                        onFocus={(e) => { e.target.style.borderColor = 'var(--accent-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)' }}
+                                        onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
+                                    />
+                                </div>
+                            </div>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                💡 Leave PT and PF empty or enter 0 if the company doesn't have these deductions.
+                            </p>
                         </motion.div>
                     )}
 

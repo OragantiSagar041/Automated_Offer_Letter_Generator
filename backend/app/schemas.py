@@ -19,6 +19,8 @@ class EmployeeBase(BaseModel):
 class EmployeeCreate(EmployeeBase):
     ctc: float
     basic_salary: float
+    pt: Optional[float] = None
+    pf: Optional[float] = None
 
 class Compensation(BaseModel):
     ctc: float
@@ -27,6 +29,12 @@ class Compensation(BaseModel):
     allowances: Optional[float] = 0.0
     deductions: Optional[float] = 0.0
     net_salary: Optional[float] = 0.0
+    pf: Optional[float] = 0.0
+    pt: Optional[float] = 0.0
+    conveyance: Optional[float] = 0.0
+    medical_allowance: Optional[float] = 0.0
+    special_allowance: Optional[float] = 0.0
+    gross_salary: Optional[float] = 0.0
     
 class Employee(EmployeeBase):
     id: Optional[str] = None

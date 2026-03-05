@@ -46,6 +46,9 @@ function App() {
 
   useEffect(() => {
     fetchEmployees();
+    // Auto-refresh every 30 seconds to pick up accept/reject status changes
+    const interval = setInterval(fetchEmployees, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -190,7 +193,9 @@ function App() {
   const stats = {
     total: employees.length,
     sent: employees.filter(e => e.status === 'Offer Sent').length,
-    pending: employees.length - employees.filter(e => e.status === 'Offer Sent').length
+    accepted: employees.filter(e => e.status === 'Accepted').length,
+    rejected: employees.filter(e => e.status === 'Rejected').length,
+    pending: employees.filter(e => e.status === 'Pending' || !e.status).length
   };
 
   const selectedBg = theme === 'dark' ? 'rgba(30, 41, 59, 0.8)' : '#f1f5f9';
@@ -283,11 +288,13 @@ function App() {
       </header>
 
       {/* --- STATS SECTION --- */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
         {[
           { label: 'Total Candidates', val: stats.total, color: 'var(--accent-color)', icon: '👥' },
-          { label: 'Offers Sent', val: stats.sent, color: 'var(--success-text)', icon: '🚀' },
-          { label: 'Pending Action', val: stats.pending, color: 'var(--pending-text)', icon: '⏳' }
+          { label: 'Offers Sent', val: stats.sent, color: '#3b82f6', icon: '🚀' },
+          { label: 'Accepted', val: stats.accepted, color: 'var(--success-text)', icon: '✅' },
+          { label: 'Rejected', val: stats.rejected, color: '#ef4444', icon: '❌' },
+          { label: 'Pending', val: stats.pending, color: 'var(--pending-text)', icon: '⏳' }
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -357,7 +364,7 @@ function App() {
             borderRadius: '16px',
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
           }}>
-            {['All', 'Pending', 'Offer Sent'].map(status => (
+            {['All', 'Pending', 'Offer Sent', 'Accepted', 'Rejected'].map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -365,7 +372,7 @@ function App() {
                   background: filterStatus === status ? 'var(--card-bg)' : 'transparent',
                   border: 'none',
                   borderRadius: '12px',
-                  color: filterStatus === status ? (status === 'Pending' ? '#FDE047' : 'var(--accent-color)') : 'var(--text-muted)',
+                  color: filterStatus === status ? (status === 'Pending' ? '#FDE047' : status === 'Accepted' ? '#4ade80' : status === 'Rejected' ? '#f87171' : 'var(--accent-color)') : 'var(--text-muted)',
                   fontSize: '0.9rem',
                   fontWeight: '700',
                   padding: '10px 24px',
@@ -610,7 +617,9 @@ function App() {
 
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700 }}>{emp.department}</span>
-                    {emp.status === 'Offer Sent' && <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>✅ DISPATCHED</span>}
+                    {emp.status === 'Offer Sent' && <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>📩 DISPATCHED</span>}
+                    {emp.status === 'Accepted' && <span style={{ background: '#dcfce7', color: '#15803d', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>✅ ACCEPTED</span>}
+                    {emp.status === 'Rejected' && <span style={{ background: '#fecaca', color: '#991b1b', padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>❌ REJECTED</span>}
                   </div>
 
                   <button
@@ -618,14 +627,14 @@ function App() {
                     style={{
                       marginTop: 'auto', // Pushes button to bottom
                       width: '100%',
-                      background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
-                      border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
-                      color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
+                      background: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? 'transparent' : 'var(--accent-gradient)',
+                      border: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? `2px solid ${emp.status === 'Accepted' ? '#10b981' : emp.status === 'Rejected' ? '#ef4444' : 'var(--accent-color)'}` : 'none',
+                      color: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? (emp.status === 'Accepted' ? '#10b981' : emp.status === 'Rejected' ? '#ef4444' : 'var(--accent-color)') : 'white',
                       padding: '16px', borderRadius: '15px', fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s',
-                      boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 15px rgba(99, 102, 241, 0.4)'
+                      boxShadow: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? 'none' : '0 4px 15px rgba(99, 102, 241, 0.4)'
                     }}
                   >
-                    {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'GENERATE OFFER'}
+                    {emp.status === 'Accepted' ? 'ACCEPTED ✅' : emp.status === 'Rejected' ? 'REJECTED' : emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'GENERATE OFFER'}
                   </button>
                 </motion.div>
               ) : (
@@ -663,7 +672,11 @@ function App() {
 
                   <div style={{ flex: 1 }}>
                     {emp.status === 'Offer Sent' ? (
-                      <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>✅ SENT</span>
+                      <span style={{ background: 'var(--success-bg)', color: 'var(--success-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>📩 SENT</span>
+                    ) : emp.status === 'Accepted' ? (
+                      <span style={{ background: '#dcfce7', color: '#15803d', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>✅ ACCEPTED</span>
+                    ) : emp.status === 'Rejected' ? (
+                      <span style={{ background: '#fecaca', color: '#991b1b', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>❌ REJECTED</span>
                     ) : (
                       <span style={{ background: 'var(--pending-bg)', color: 'var(--pending-text)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>PENDING</span>
                     )}
@@ -677,15 +690,15 @@ function App() {
                   <button
                     onClick={() => setSelectedEmployee(emp)}
                     style={{
-                      background: emp.status === 'Offer Sent' ? 'transparent' : 'var(--accent-gradient)',
-                      border: emp.status === 'Offer Sent' ? `2px solid var(--accent-color)` : 'none',
-                      color: emp.status === 'Offer Sent' ? 'var(--accent-color)' : 'white',
+                      background: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? 'transparent' : 'var(--accent-gradient)',
+                      border: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? `2px solid ${emp.status === 'Accepted' ? '#10b981' : emp.status === 'Rejected' ? '#ef4444' : 'var(--accent-color)'}` : 'none',
+                      color: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? (emp.status === 'Accepted' ? '#10b981' : emp.status === 'Rejected' ? '#ef4444' : 'var(--accent-color)') : 'white',
                       padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer',
                       minWidth: '140px',
-                      boxShadow: emp.status === 'Offer Sent' ? 'none' : '0 4px 10px rgba(99, 102, 241, 0.3)'
+                      boxShadow: (emp.status === 'Offer Sent' || emp.status === 'Accepted' || emp.status === 'Rejected') ? 'none' : '0 4px 10px rgba(99, 102, 241, 0.3)'
                     }}
                   >
-                    {emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'Generate'}
+                    {emp.status === 'Accepted' ? 'ACCEPTED ✅' : emp.status === 'Rejected' ? 'REJECTED' : emp.status === 'Offer Sent' ? 'VIEW / RESEND' : 'Generate'}
                   </button>
                 </motion.div>
               )
