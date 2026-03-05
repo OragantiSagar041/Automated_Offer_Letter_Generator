@@ -36,7 +36,7 @@ class EmailService:
         self.brevo_sender_email = os.getenv("BREVO_SENDER_EMAIL", self.sender_email).strip()
 
         # Backend URL for offer response links
-        self.backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").strip().rstrip('/')
+        self.backend_url = os.getenv("BACKEND_URL", os.getenv("RENDER_EXTERNAL_URL", "https://automated-offer-letter-generator.onrender.com")).strip().rstrip('/')
 
         # Debug Logging
         print(f"DEBUG: EmailService Init")
