@@ -121,6 +121,26 @@ function App() {
     setShowBulkModal(true);
   };
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} employees? This cannot be undone.`)) return;
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch(`${API_URL}/employees/bulk-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+      if (res.ok) {
+        setSelectedIds(new Set());
+        fetchEmployees();
+      } else {
+        alert("Failed to delete.");
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   const handleBulkSendStart = async (templateUrl, companyName, letterType) => {
     setShowBulkModal(false);
     setIsBulkSending(true);
@@ -491,24 +511,45 @@ function App() {
             </button>
 
             {selectedIds.size > 0 && (
-              <button
-                onClick={handleBulkSendClick}
-                style={{
-                  background: 'var(--bg-tertiary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-color)',
-                  padding: '12px 24px',
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  fontSize: '0.95rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                Draft ({selectedIds.size})
-              </button>
+              <>
+                <button
+                  onClick={handleBulkDelete}
+                  style={{
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: 'var(--card-shadow)'
+                  }}
+                >
+                  Delete ({selectedIds.size})
+                </button>
+                <button
+                  onClick={handleBulkSendClick}
+                  style={{
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-color)',
+                    padding: '12px 24px',
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  Draft ({selectedIds.size})
+                </button>
+              </>
             )}
 
             <button

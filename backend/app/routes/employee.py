@@ -105,7 +105,7 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
     return fix_id(new_employee_doc)
 
 @router.get("/", response_model=List[schemas.Employee])
-def read_employees(skip: int = 0, limit: int = 100, db = Depends(database.get_db)):
+def read_employees(skip: int = 0, limit: int = 300, db = Depends(database.get_db)):
     cursor = db.employees.find().skip(skip).limit(limit)
     employees = [fix_id(doc) for doc in cursor]
     return employees
@@ -118,7 +118,7 @@ def download_template():
     headers = [
         "Employee ID", "Full Name", "Email Address", "Designation", 
         "Department", "Joining Date", "Location", "Employment Type", 
-        "Annual CTC", "Basic Salary"
+        "Annual CTC", "Basic Salary", "Monthly PT", "Monthly PF"
     ]
     df = pd.DataFrame(columns=headers)
     stream = io.BytesIO()
@@ -153,6 +153,23 @@ def delete_employee(employee_id: str, db = Depends(database.get_db)):
     
     # Cascade delete generated letters
     db.generated_letters.delete_many({"employee_id": ObjectId(employee_id)})
+    return
+
+class BulkDeleteRequest(schemas.BaseModel):
+    ids: List[str]
+
+@router.post("/bulk-delete", status_code=204)
+def bulk_delete_employees(request: BulkDeleteRequest, db = Depends(database.get_db)):
+    valid_ids = []
+    for emp_id in request.ids:
+        if ObjectId.is_valid(emp_id):
+            valid_ids.append(ObjectId(emp_id))
+            
+    if not valid_ids:
+        return
+        
+    db.employees.delete_many({"_id": {"$in": valid_ids}})
+    db.generated_letters.delete_many({"employee_id": {"$in": valid_ids}})
     return
 
 @router.put("/{employee_id}", response_model=schemas.Employee)
@@ -304,20 +321,37 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                 hra = basic * 0.40
                 conveyance = min(basic * 0.267, 1600 * 12)
                 medical_allowance = min(basic * 0.208, 1250 * 12)
-                pf = basic * 0.12
                 special = ctc - (basic + hra + conveyance + medical_allowance)
                 if special < 0: special = 0
                 
                 gross_monthly = (basic + hra + conveyance + medical_allowance + special) / 12
-                if gross_monthly <= 15000:
-                    pt_monthly = 0
-                elif gross_monthly <= 20000:
-                    pt_monthly = 150
-                else:
-                    pt_monthly = 200
-                pt_annual = pt_monthly * 12
                 gross_annual = basic + hra + conveyance + medical_allowance + special
-                net_annual = gross_annual - pt_annual - pf
+
+                # 6. Check for custom PT and PF in Excel
+                col_pt = find_col(['pt', 'monthly_pt', 'monthly pt'])
+                manual_pt = float(row.get(col_pt)) if col_pt and not pd.isna(row.get(col_pt)) else None
+                
+                col_pf = find_col(['pf', 'monthly_pf', 'monthly pf'])
+                manual_pf = float(row.get(col_pf)) if col_pf and not pd.isna(row.get(col_pf)) else None
+
+                if manual_pt is not None:
+                    pt_monthly = manual_pt
+                else:
+                    if gross_monthly <= 15000:
+                        pt_monthly = 0
+                    elif gross_monthly <= 20000:
+                        pt_monthly = 150
+                    else:
+                        pt_monthly = 200
+                pt_annual = pt_monthly * 12
+                
+                if manual_pf is not None:
+                    pf_monthly = manual_pf
+                    pf_annual = pf_monthly * 12
+                else:
+                    pf_annual = basic * 0.12
+                    
+                net_annual = gross_annual - pt_annual - pf_annual
 
                 doc = {
                     "emp_id": str(emp_id),
@@ -340,8 +374,8 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                         "allowances": round(special, 2),
                         "gross_salary": round(gross_annual, 2),
                         "pt": round(pt_annual, 2),
-                        "pf": round(pf, 2),
-                        "deductions": round(pf + pt_annual, 2),
+                        "pf": round(pf_annual, 2),
+                        "deductions": round(pf_annual + pt_annual, 2),
                         "net_salary": round(net_annual, 2)
                     }
                 }
