@@ -164,7 +164,18 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         const container = document.createElement('div');
         container.className = 'pdfgen';
         container.style.position = 'relative';
-        container.innerHTML = htmlContent;
+
+        // Remove trailing empty paragraphs or breaks that cause extra blank pages
+        let cleanHtml = htmlContent;
+        let prevLen = -1;
+        while (cleanHtml.length !== prevLen) {
+            prevLen = cleanHtml.length;
+            cleanHtml = cleanHtml.replace(/(?:<p>(?:\s|<br\s*\/?>|&nbsp;)*<\/p>\s*)+$/gi, '')
+                .replace(/(?:<br\s*\/?>\s*)+$/gi, '')
+                .trim();
+        }
+
+        container.innerHTML = cleanHtml;
 
         wrapper.appendChild(styleTag);
         wrapper.appendChild(container);
@@ -183,10 +194,31 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         await new Promise(r => setTimeout(r, 500));
 
         // ════════════════════════════════════════════════════════════════
-        // STEP 2 — Calculate smart page breaks (section-aware)
+        // STEP 2 — Calculate smart page breaks (section-aware) & True Height
         // ════════════════════════════════════════════════════════════════
-        const totalHeight = container.scrollHeight;
-        console.log(`[PDF GEN] Total content height: ${totalHeight}px, Content/page: ${CONTENT_H}px`);
+
+        // Find the absolute lowest point of actual visible content
+        let trueBottom = 0;
+        const containerRect = container.getBoundingClientRect();
+        const allNodes = Array.from(container.querySelectorAll('*'));
+        for (const el of allNodes) {
+            if (['BR', 'STYLE', 'SCRIPT'].includes(el.tagName)) continue;
+
+            // Only consider elements that have direct text content, or are standalone visual blocks
+            const hasDirectText = Array.from(el.childNodes).some(n => n.nodeType === 3 /* Node.TEXT_NODE */ && n.textContent.trim().length > 0);
+            if (hasDirectText || ['IMG', 'HR', 'TABLE', 'TD', 'TH', 'LI'].includes(el.tagName)) {
+                const rect = el.getBoundingClientRect();
+                const bottomRel = rect.bottom - containerRect.top;
+                if (bottomRel > trueBottom) {
+                    trueBottom = bottomRel;
+                }
+            }
+        }
+
+        // Add 5px buffer just so text isn't perfectly flush against the crop
+        const totalHeight = trueBottom > 0 ? trueBottom + 5 : container.scrollHeight;
+
+        console.log(`[PDF GEN] Container scrollHeight: ${container.scrollHeight}px, True Visible Height: ${totalHeight}px, Content/page: ${CONTENT_H}px`);
 
         // Find all section headings (h4 for agreements, divs with section-block class)
         const headings = Array.from(container.querySelectorAll('h4, .section-block'));
@@ -196,7 +228,8 @@ export const generatePdfWithTemplate = async (htmlContent, templateUrl = '/Arah_
         const pageBreaks = [0]; // Start of first page
         let currentY = 0;
 
-        while (currentY + CONTENT_H < totalHeight) {
+        // Tolerate up to 15px of overflow at the bottom before spawning a new page
+        while (currentY + CONTENT_H < totalHeight - 15) {
             let idealBreak = currentY + CONTENT_H;
             let bestBreak = idealBreak;
 
