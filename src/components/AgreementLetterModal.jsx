@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { generateOfferLetterPdf } from '../utils/offerLetterPdfGenerator';
+import { generatePdfWithTemplate } from '../utils/pdfTemplateGenerator';
 import { API_URL } from '../config';
 
 const COMPANY_NAMES = {
-    '/Arah_Template.jpg': 'Arah Infotech Pvt Ltd',
+    '/Arah_Template.pdf': 'Arah Infotech Pvt Ltd',
     '/UPlife.pdf': 'UP LIFE INDIA PVT LTD',
     '/Vagerious.pdf': 'VAGARIOUS SOLUTIONS PVT LTD',
     '/Zero7_A4.jpg': 'ZERO7 TECHNOLOGIES TRAINING & DEVELOPMENT'
@@ -13,24 +13,14 @@ const COMPANY_NAMES = {
 const EditableContent = ({ initialContent, onChange }) => {
     const editorRef = React.useRef(null);
 
-    // Initial render only
     React.useEffect(() => {
         if (editorRef.current && initialContent && !editorRef.current.innerHTML) {
             editorRef.current.innerHTML = initialContent;
         }
     }, []);
 
-    // If initialContent changes significantly (e.g. new generation), update it
-    // But be careful not to overwrite user edits if it's just a small re-render
     React.useEffect(() => {
         if (editorRef.current && initialContent !== editorRef.current.innerHTML) {
-            // Only update if the content is truly different (e.g. from AI generation)
-            // avoiding overwriting if the user is typing (which updates state)
-            // This is tricky. simpler: only update if the passed initialContent
-            // doesn't match what we have, but we need to trust the parent pushes new content only when needed.
-            // For now, let's trust the parent only sends new initialContent when it changes from source.
-
-            // Check if the update is coming from our own input (loop)
             if (document.activeElement !== editorRef.current) {
                 editorRef.current.innerHTML = initialContent;
             }
@@ -57,7 +47,7 @@ const EditableContent = ({ initialContent, onChange }) => {
 
     const execCmd = (cmd, val = null) => {
         document.execCommand(cmd, false, val);
-        if (editorRef.current) onChange(editorRef.current.innerHTML); // Trigger update
+        if (editorRef.current) onChange(editorRef.current.innerHTML);
         checkActiveFormats();
     };
 
@@ -138,29 +128,24 @@ const EditableContent = ({ initialContent, onChange }) => {
     );
 };
 
-const btnStyle = {
-    padding: '6px 10px', background: 'white', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', minWidth: '32px'
-};
-
 const selectStyle = {
     padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', outline: 'none', cursor: 'pointer',
     background: 'var(--bg-secondary)', color: 'var(--text-primary)'
 };
 
-const LetterModal = ({ employee, onClose, onSuccess }) => {
-    const [letterType, setLetterType] = useState('Offer Letter');
+const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
+    const [letterType, setLetterType] = useState('Agreement');
     const [generatedContent, setGeneratedContent] = useState('');
     const [loading, setLoading] = useState(false);
     const [viewMode, setViewMode] = useState('pdf');
 
-    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.jpg');
+    const [selectedTemplate, setSelectedTemplate] = useState('/Arah_Template.pdf');
     const [companyName, setCompanyName] = useState('Arah Infotech Pvt Ltd');
 
     const prevTemplateRef = React.useRef(selectedTemplate);
     const prevCompanyNameRef = React.useRef(companyName);
     const contentRef = React.useRef(generatedContent);
 
-    // Keep contentRef in sync
     useEffect(() => {
         contentRef.current = generatedContent;
     }, [generatedContent]);
@@ -189,7 +174,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             // Auto-extract company name from filename
             let parsedName = data.filename.replace(/\.pdf\.jpg$|\.jpg$|\.png$/i, '');
             // Strip out common suffixes
-            parsedName = parsedName.replace(/_Offer_Letter_Background|_Offer_Letter|_Template|_Background/gi, '');
+            parsedName = parsedName.replace(/_Offer_Letter_Background|_Offer_Letter|_Agreement|_Template|_Background/gi, '');
             // Replace remaining underscores with spaces
             parsedName = parsedName.replace(/_/g, ' ').trim();
             if (parsedName) {
@@ -202,83 +187,60 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             alert("Upload failed: " + err.message);
         } finally {
             setLoading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
-    // Auto-update content (text replacement) and email when template changes
     useEffect(() => {
-        // If the selected template is a KNOWN one, switch the company name automatically.
-        // If it's a custom one (not in map), we leave the current company name (or user can edit it).
-        console.log("Template switched:", selectedTemplate);
         if (COMPANY_NAMES[selectedTemplate]) {
-            console.log("Setting company name to:", COMPANY_NAMES[selectedTemplate]);
             setCompanyName(COMPANY_NAMES[selectedTemplate]);
         }
     }, [selectedTemplate]);
 
     useEffect(() => {
         const prevName = prevCompanyNameRef.current;
-        // Update the ref to the new company name for next change
         prevCompanyNameRef.current = companyName;
 
-        // Update Email Body
         setEmailBody(
-            `Dear ${employee.name},\n\nWe are pleased to offer you the position at ${companyName}.\n\nPlease find the detailed offer letter attached.\n\nBest Regards,\nHR Team`
+            `Dear ${employee.name},\n\nWe are pleased to align on an agreement with ${companyName}.\n\nPlease find the detailed agreement document attached.\n\nBest Regards,\nTeam`
         );
 
-        // Update Generated HTML Content to reflect new Company Name
         if (generatedContent && prevName !== companyName) {
             let newContent = generatedContent;
 
-            // Build a list of all names to search for: the previous company name + all known names
             const namesToReplace = new Set();
-            // Always add the previous name so we catch whatever was in the content before
             if (prevName) namesToReplace.add(prevName);
-            // Also add all known company names to catch any variant
             Object.values(COMPANY_NAMES).forEach(name => namesToReplace.add(name));
 
             namesToReplace.forEach(name => {
-                if (name.toLowerCase() === companyName.toLowerCase()) return; // Don't replace self
-                // Escape special chars for regex
+                if (name.toLowerCase() === companyName.toLowerCase()) return;
                 const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                // Case-insensitive global replacement to catch UPPERCASE, Title Case, etc.
                 const regex = new RegExp(escapedName, 'gi');
                 newContent = newContent.replace(regex, companyName);
             });
 
             if (newContent !== generatedContent) {
-                console.log("Updated content with new company name:", companyName);
                 setGeneratedContent(newContent);
             } else {
-                // Text didn't change but template background might have changed
                 if (viewMode === 'pdf') {
                     generatePreview(generatedContent);
                 }
             }
-        } else if (generatedContent && prevName === companyName) {
-            // Company name didn't change but this effect might have been triggered by employee.name
-            // Just regenerate PDF if needed
-            if (viewMode === 'pdf') {
-                generatePreview(generatedContent);
-            }
         }
-    }, [companyName, employee.name]);
+    }, [companyName]);
 
-    // Auto-Preview when generatedContent changes
     useEffect(() => {
         if (!generatedContent || viewMode !== 'pdf') return;
-
-        // Debounce typing to prevent excessive PDF generation
         const timer = setTimeout(() => {
             generatePreview(generatedContent);
-        }, 500); // Reduced to 500ms for faster feedback
+        }, 500);
         return () => clearTimeout(timer);
     }, [generatedContent, selectedTemplate]);
 
     const handleGenerate = () => {
         setLoading(true);
         setPdfUrl(null);
-        fetch(`${API_URL}/letters/generate`, {
+        fetch(`${API_URL}/agreement-letters/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -292,7 +254,6 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             .then(async data => {
                 setGeneratedContent(data.content);
                 setLoading(false);
-                // Immediate preview
                 await generatePreview(data.content);
             })
             .catch(err => {
@@ -305,9 +266,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     const generatePreview = async (htmlContent) => {
         setIsGeneratingPdf(true);
         try {
-            // Clean up header for PDF (which has its own logo in background)
             const contentWithoutHeader = htmlContent.replace(/<div style="text-align: center; border-bottom: 2px solid #0056b3;[\s\S]*?<\/div>/i, '');
-            const dataUri = await generateOfferLetterPdf(contentWithoutHeader, selectedTemplate);
+            const dataUri = await generatePdfWithTemplate(contentWithoutHeader, selectedTemplate);
             setPdfUrl(dataUri);
         } catch (e) {
             console.error(e);
@@ -326,14 +286,38 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
         document.body.removeChild(link);
     };
 
+    const handleDownloadDOCX = async () => {
+        if (!generatedContent) return;
+        try {
+            const res = await fetch(`${API_URL}/agreement-letters/download-docx`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html_content: generatedContent })
+            });
+            if (!res.ok) throw new Error("Could not construct DOCX");
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${employee.name.replace(/\s+/g, '_')}_${letterType}.docx`;
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+        } catch (e) {
+            console.error(e);
+            alert("Failed to download DOCX");
+        }
+    };
+
     const handleSendEmail = async () => {
-        const btn = document.getElementById('emailBtn');
+        const btn = document.getElementById('agreementEmailBtn');
         btn.innerText = 'Sending...';
         btn.disabled = true;
 
         try {
             const subject = `${letterType} - ${employee.name}`;
-            const res = await fetch(`${API_URL}/email/send`, {
+            const res = await fetch(`${API_URL}/agreement-email/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -429,12 +413,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
                         }}
                     >
-                        <option>Offer Letter</option>
-                        <option>Internship Letter</option>
-                        <option>Appraisal Letter</option>
-                        <option>Experience Letter</option>
-                        <option>Relieving Letter</option>
-                        <option>Others</option>
+                        <option>Agreement</option>
                     </select>
 
                     <select
@@ -445,7 +424,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
                         }}
                     >
-                        <option value="/Arah_Template.jpg">Arah Infotech</option>
+                        <option value="/Arah_Template.pdf">Arah Infotech</option>
                         <option value="/UPlife.pdf">UPlife</option>
                         <option value="/Vagerious.pdf">Vagarious</option>
                         <option value="/Zero7_A4.jpg">Zero7</option>
@@ -512,14 +491,32 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     {generatedContent && !loading && (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                             <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between' }}>
-                                <span>📄 PDF Synchronizer ({pdfUrl ? '100% ✓' : 'Rendering...'})</span>
+                                <span>📄 PDF Synchronizer (75%)</span>
                                 {isGeneratingPdf && <span style={{ color: 'var(--accent-color)', animation: 'pulse 1s infinite' }}>● Syncing</span>}
                             </div>
                             <div style={{ flex: 1, background: '#525659', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative' }}>
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    pointerEvents: 'none', zIndex: 0,
+                                    overflow: 'hidden',
+                                }}>
+                                    <div style={{
+                                        fontSize: '5rem',
+                                        fontWeight: '900',
+                                        color: 'rgba(255,255,255,0.06)',
+                                        transform: 'rotate(-35deg)',
+                                        userSelect: 'none',
+                                        letterSpacing: '0.3em',
+                                        whiteSpace: 'nowrap',
+                                    }}>
+                                        DRAFT &nbsp; DRAFT &nbsp; DRAFT
+                                    </div>
+                                </div>
                                 {pdfUrl ? (
-                                    <iframe src={pdfUrl + "#toolbar=0&navpanes=0&zoom=75"} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
+                                    <iframe src={pdfUrl + "#toolbar=0&navpanes=0&zoom=75"} style={{ width: '100%', height: '100%', border: 'none', position: 'relative', zIndex: 1 }} title="PDF Preview" />
                                 ) : (
-                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Finalizing pixels...</div>
+                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', position: 'relative', zIndex: 1 }}>Finalizing pixels...</div>
                                 )}
                             </div>
                         </div>
@@ -546,6 +543,15 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
                             <button
+                                onClick={handleDownloadDOCX}
+                                style={{
+                                    background: 'var(--bg-secondary)', border: '2px solid #3b82f6', color: '#3b82f6',
+                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem'
+                                }}
+                            >
+                                ⬇️ Archive DOCX
+                            </button>
+                            <button
                                 onClick={handleDownloadPDF}
                                 style={{
                                     background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
@@ -555,14 +561,14 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                                 ⬇️ Archive PDF
                             </button>
                             <button
-                                id="emailBtn"
+                                id="agreementEmailBtn"
                                 onClick={handleSendEmail}
                                 style={{
                                     background: 'var(--accent-color)', border: 'none', color: 'white',
                                     padding: '12px 28px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)'
                                 }}
                             >
-                                ✉️ Dispatch to Candidate
+                                ✉️ Dispatch to Partner
                             </button>
                         </div>
                     </div>
@@ -572,4 +578,4 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
     );
 };
 
-export default LetterModal;
+export default AgreementLetterModal;

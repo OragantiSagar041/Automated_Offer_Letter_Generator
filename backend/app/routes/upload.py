@@ -35,8 +35,7 @@ async def upload_template_image(request: Request, file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        base_url = str(request.base_url).rstrip("/")
-        return {"filename": file.filename, "path": str(file_path), "status": "success", "url": f"{base_url}/{file.filename}"}
+        return {"filename": file.filename, "path": str(file_path), "status": "success", "url": f"/{file.filename}"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -75,8 +74,7 @@ async def upload_template_pdf(request: Request, file: UploadFile = File(...)):
         if os.path.exists(temp_pdf_path):
             os.remove(temp_pdf_path)
             
-        base_url = str(request.base_url).rstrip("/")
-        return {"filename": image_filename, "url": f"{base_url}/{image_filename}", "status": "success"}
+        return {"filename": image_filename, "url": f"/{image_filename}", "status": "success"}
 
     except Exception as e:
         print(f"Error converting PDF: {e}")

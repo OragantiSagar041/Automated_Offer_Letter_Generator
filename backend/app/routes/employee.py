@@ -116,9 +116,9 @@ def download_template():
     Download Excel Template for Bulk Import.
     """
     headers = [
-        "Employee ID", "Full Name", "Email Address", "Designation", 
-        "Department", "Joining Date", "Location", "Employment Type", 
-        "Annual CTC", "Basic Salary", "Monthly PT", "Monthly PF"
+        "Employee ID", "Full Name", "Email Address", "Joining Date", 
+        "Designation", "Department", "Employment Type", "Location", 
+        "Annual CTC (₹)", "Basic Salary (Monthly) (₹)", "PT (Monthly) (₹)", "PF (Monthly) (₹)"
     ]
     df = pd.DataFrame(columns=headers)
     stream = io.BytesIO()
@@ -313,7 +313,7 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                     emp_id = f"EMP{count + 1 + success_count:03d}" 
 
                 # 5. CTC & Compensation
-                col_ctc = find_col(['ctc', 'annual_ctc'])
+                col_ctc = find_col(['annual_ctc_(₹)', 'ctc', 'annual_ctc'])
                 ctc_val = row.get(col_ctc, 0)
                 ctc = float(ctc_val) if not pd.isna(ctc_val) else 0
 
@@ -328,10 +328,10 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                 gross_annual = basic + hra + conveyance + medical_allowance + special
 
                 # 6. Check for custom PT and PF in Excel
-                col_pt = find_col(['pt', 'monthly_pt', 'monthly pt'])
+                col_pt = find_col(['pt_(monthly)_(₹)', 'pt', 'monthly_pt', 'monthly pt'])
                 manual_pt = float(row.get(col_pt)) if col_pt and not pd.isna(row.get(col_pt)) else None
                 
-                col_pf = find_col(['pf', 'monthly_pf', 'monthly pf'])
+                col_pf = find_col(['pf_(monthly)_(₹)', 'pf', 'monthly_pf', 'monthly pf'])
                 manual_pf = float(row.get(col_pf)) if col_pf and not pd.isna(row.get(col_pf)) else None
 
                 if manual_pt is not None:

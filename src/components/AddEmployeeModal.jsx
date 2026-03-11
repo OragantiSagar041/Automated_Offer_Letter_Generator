@@ -80,7 +80,7 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
     </div>
 );
 
-const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
+const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
     const [formData, setFormData] = useState(() => {
         if (initialData) {
             const typeLower = (initialData.employment_type || '').toLowerCase();
@@ -186,26 +186,28 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         color: 'var(--text-primary)',
                         marginBottom: '0.5rem'
                     }}>
-                        {initialData ? 'Update Employee Profile' : 'New Employee Onboarding'}
+                        {isViewOnly ? 'View Employee Profile' : initialData ? 'Update Employee Profile' : 'New Employee Onboarding'}
                     </h2>
                     <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1rem', fontWeight: '500' }}>
-                        {initialData ? 'Refine details for high-performance offer letters.' : 'Empower your team with a new enterprise member.'}
+                        {isViewOnly ? 'Review details below.' : initialData ? 'Refine details for high-performance offer letters.' : 'Empower your team with a new enterprise member.'}
                     </p>
                 </div>
 
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <button
-                        type="button"
-                        onClick={() => window.open(`${API_URL}/employees/template`, '_blank')}
-                        style={{
-                            background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)',
-                            padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
-                            display: 'inline-flex', alignItems: 'center', gap: '8px'
-                        }}
-                    >
-                        📥 Download Bulk Import Template
-                    </button>
-                </div>
+                {!isViewOnly && (
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <button
+                            type="button"
+                            onClick={() => window.open(`${API_URL}/employees/template`, '_blank')}
+                            style={{
+                                background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)',
+                                padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
+                                display: 'inline-flex', alignItems: 'center', gap: '8px'
+                            }}
+                        >
+                            📥 Download Bulk Import Template
+                        </button>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2.5rem' }}>
 
@@ -217,16 +219,16 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
                             <div style={{ gridColumn: 'span 4' }}>
-                                <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} />
+                                <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} disabled={isViewOnly} />
                             </div>
                             <div style={{ gridColumn: 'span 8' }}>
-                                <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} error={errors.name} required />
+                                <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} error={errors.name} required disabled={isViewOnly} />
                             </div>
                             <div style={{ gridColumn: 'span 8' }}>
-                                <InputGroup label="Email Address" name="email" type="email" placeholder="sarah@corp.com" value={formData.email} onChange={handleChange} required />
+                                <InputGroup label="Email Address" name="email" type="email" placeholder="sarah@corp.com" value={formData.email} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
                             <div style={{ gridColumn: 'span 4' }}>
-                                <InputGroup label="Joining Date" name="joining_date" type="date" value={formData.joining_date} onChange={handleChange} required />
+                                <InputGroup label="Joining Date" name="joining_date" type="date" value={formData.joining_date} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
                         </div>
                     </div>
@@ -237,10 +239,10 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                             <span style={{ borderBottom: '2px solid #10b981', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                            <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required />
-                            <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} error={errors.department} required />
-                            <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} />
-                            <InputGroup label="Location" name="location" placeholder="e.g. Bangalore, Remote" value={formData.location} onChange={handleChange} required />
+                            <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required disabled={isViewOnly} />
+                            <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} error={errors.department} required disabled={isViewOnly} />
+                            <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} disabled={isViewOnly} />
+                            <InputGroup label="Location" name="location" placeholder="e.g. Bangalore, Remote" value={formData.location} onChange={handleChange} required disabled={isViewOnly} />
                         </div>
                     </div>
 
@@ -255,8 +257,8 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                                 <span style={{ borderBottom: '2px solid #f59e0b', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required />
-                                <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} required />
+                                <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required disabled={isViewOnly} />
+                                <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -332,42 +334,45 @@ const AddEmployeeModal = ({ onClose, onSave, initialData }) => {
                         <button type="button" onClick={onClose} style={{
                             flex: 1,
                             padding: '16px',
-                            background: 'transparent',
-                            border: '2px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            fontSize: '1rem',
+                            background: isViewOnly ? 'var(--accent-color)' : 'transparent',
+                            border: isViewOnly ? 'none' : '2px solid var(--border-color)',
+                            color: isViewOnly ? 'white' : 'var(--text-primary)',
+                            fontSize: '1.1rem',
                             fontWeight: 'bold',
                             borderRadius: '16px',
                             cursor: 'pointer',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            boxShadow: isViewOnly ? '0 8px 20px -5px rgba(99, 102, 241, 0.4)' : 'none'
                         }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)' }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
+                            onMouseOver={(e) => { if (!isViewOnly) e.currentTarget.style.background = 'var(--bg-tertiary)'; }}
+                            onMouseOut={(e) => { if (!isViewOnly) e.currentTarget.style.background = 'transparent'; }}
                         >
-                            Cancel
+                            {isViewOnly ? 'Close' : 'Cancel'}
                         </button>
-                        <button type="submit" style={{
-                            flex: 2,
-                            padding: '16px',
-                            background: 'var(--accent-color)',
-                            border: 'none',
-                            color: 'white',
-                            fontSize: '1.1rem',
-                            fontWeight: '800',
-                            borderRadius: '16px',
-                            cursor: 'pointer',
-                            boxShadow: '0 8px 20px -5px rgba(99, 102, 241, 0.4)',
-                            transition: 'transform 0.1s, background 0.2s',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-                        }}
-                            onMouseOver={(e) => e.currentTarget.style.background = 'var(--accent-hover)'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'var(--accent-color)'}
-                            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-                            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                            {initialData ? 'Apply Updates' : 'Onboard Employee'}
-                            <span style={{ fontSize: '1.3rem' }}>→</span>
-                        </button>
+                        {!isViewOnly && (
+                            <button type="submit" style={{
+                                flex: 2,
+                                padding: '16px',
+                                background: 'var(--accent-color)',
+                                border: 'none',
+                                color: 'white',
+                                fontSize: '1.1rem',
+                                fontWeight: '800',
+                                borderRadius: '16px',
+                                cursor: 'pointer',
+                                boxShadow: '0 8px 20px -5px rgba(99, 102, 241, 0.4)',
+                                transition: 'transform 0.1s, background 0.2s',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                            }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'var(--accent-hover)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'var(--accent-color)'}
+                                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            >
+                                {initialData ? 'Apply Updates' : 'Onboard Employee'}
+                                <span style={{ fontSize: '1.3rem' }}>→</span>
+                            </button>
+                        )}
                     </div>
                 </form>
             </motion.div>

@@ -1,0 +1,238 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend
+plugins: anyio-4.12.0, cov-7.0.0
+collected 58 items
+
+tests\test_api.py ....                                                   [  6%]
+tests\test_company.py ................                                   [ 34%]
+tests\test_core.py ..F..                                                 [ 43%]
+tests\test_employee.py ................F..                               [ 75%]
+tests\test_extra.py .F.FFF..                                             [ 89%]
+tests\test_letters.py ......                                             [100%]
+
+================================== FAILURES ===================================
+______________________________ test_cors_headers ______________________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+
+    def test_cors_headers(client):
+        response = client.options("/")
+>       assert response.status_code == 200
+E       assert 405 == 200
+E        +  where 405 = <Response [405 Method Not Allowed]>.status_code
+
+tests\test_core.py:20: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: OPTIONS http://testserver/
+INFO:app.main:Response status: 405
+INFO:httpx:HTTP Request: OPTIONS http://testserver/ "HTTP/1.1 405 Method Not Allowed"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: OPTIONS http://testserver/
+INFO     app.main:main.py:21 Response status: 405
+INFO     httpx:_client.py:1025 HTTP Request: OPTIONS http://testserver/ "HTTP/1.1 405 Method Not Allowed"
+____________________ test_upload_employees_invalid_format _____________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+
+    def test_upload_employees_invalid_format(client):
+        files = {"file": ("test.txt", b"some text", "text/plain")}
+        res = client.post("/employees/upload", files=files)
+>       assert res.status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests\test_employee.py:153: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: POST http://testserver/employees/upload
+INFO:app.main:Response status: 500
+INFO:httpx:HTTP Request: POST http://testserver/employees/upload "HTTP/1.1 500 Internal Server Error"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: POST http://testserver/employees/upload
+INFO     app.main:main.py:21 Response status: 500
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/employees/upload "HTTP/1.1 500 Internal Server Error"
+______________________________ test_reject_offer ______________________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+mock_employee = '69b10e7133689ec599580c6b'
+
+    def test_reject_offer(client, mock_employee):
+        mock_db.employees.update_one({"_id": ObjectId(mock_employee)}, {"$set": {"status": "Offer Sent"}})
+        res = client.get(f"/offer/reject?token=tok_123")
+        assert res.status_code == 200
+        assert "text/html" in res.headers["content-type"]
+    
+        # Check DB update
+        emp = mock_db.employees.find_one({"_id": ObjectId(mock_employee)})
+>       assert emp["status"] == "Rejected"
+E       AssertionError: assert 'Offer Sent' == 'Rejected'
+E         
+E         - Rejected
+E         + Offer Sent
+
+tests\test_extra.py:53: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: GET http://testserver/offer/reject?token=tok_123
+INFO:app.main:Response status: 200
+INFO:httpx:HTTP Request: GET http://testserver/offer/reject?token=tok_123 "HTTP/1.1 200 OK"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: GET http://testserver/offer/reject?token=tok_123
+INFO     app.main:main.py:21 Response status: 200
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/offer/reject?token=tok_123 "HTTP/1.1 200 OK"
+____________________________ test_upload_signature ____________________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+
+    def test_upload_signature(client):
+        b64_img = base64.b64encode(b"simulated_image_data").decode("utf-8")
+        payload = {
+            "image": f"data:image/png;base64,{b64_img}"
+        }
+        res = client.post("/upload/signature", json=payload)
+>       assert res.status_code in [200, 400] # Depends on local save path configuration logic. Can gracefully fail in CI
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 404 in [200, 400]
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests\test_extra.py:66: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: POST http://testserver/upload/signature
+INFO:app.main:Response status: 404
+INFO:httpx:HTTP Request: POST http://testserver/upload/signature "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: POST http://testserver/upload/signature
+INFO     app.main:main.py:21 Response status: 404
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/upload/signature "HTTP/1.1 404 Not Found"
+____________________ test_upload_signature_invalid_format _____________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+
+    def test_upload_signature_invalid_format(client):
+        payload = {
+            "image": "not_base64_format"
+        }
+        res = client.post("/upload/signature", json=payload)
+>       assert res.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests\test_extra.py:73: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: POST http://testserver/upload/signature
+INFO:app.main:Response status: 404
+INFO:httpx:HTTP Request: POST http://testserver/upload/signature "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: POST http://testserver/upload/signature
+INFO     app.main:main.py:21 Response status: 404
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/upload/signature "HTTP/1.1 404 Not Found"
+______________________ test_send_offer_email_missing_pdf ______________________
+
+client = <starlette.testclient.TestClient object at 0x000002429CEC3B60>
+mock_employee = '69b10e7133689ec599580c6d'
+
+    def test_send_offer_email_missing_pdf(client, mock_employee):
+        payload = {
+            "employee_id": mock_employee,
+            "letter_content": "Congratulations...",
+            "pdf_base64": "" # empty base64 usually fails if not caught early, or fails during attachment
+        }
+        res = client.post("/email/send", json=payload)
+>       assert res.status_code in [400, 422, 500]
+E       assert 200 in [400, 422, 500]
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests\test_extra.py:83: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: POST http://testserver/email/send
+INFO:app.main:Response status: 200
+INFO:httpx:HTTP Request: POST http://testserver/email/send "HTTP/1.1 200 OK"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: POST http://testserver/email/send
+INFO     app.main:main.py:21 Response status: 200
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/email/send "HTTP/1.1 200 OK"
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Programs\Python\Python314\Lib\site-packages\bson\__init__.py:116
+  C:\Users\sagar\AppData\Local\Programs\Python\Python314\Lib\site-packages\bson\__init__.py:116: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+    EPOCH_NAIVE = datetime.datetime.utcfromtimestamp(0)
+
+app\schemas.py:39
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:39: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Employee(EmployeeBase):
+
+app\schemas.py:62
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:62: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Payroll(PayrollBase):
+
+app\schemas.py:71
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LetterRequest(BaseModel):
+
+app\schemas.py:80
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:80: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmailRequest(BaseModel):
+
+app\routes\agreement_company.py:39
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:39: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CompanyResponse(CompanyBase):
+
+tests/test_api.py::test_create_employee
+tests/test_employee.py::test_create_employee_success
+tests/test_employee.py::test_create_employee_auto_calculate_pt_pf
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:27: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    emp_data = employee.dict()
+
+tests/test_api.py::test_create_employee
+tests/test_employee.py::test_create_employee_success
+tests/test_employee.py::test_create_employee_auto_calculate_pt_pf
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:84: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_company.py::test_create_company_success
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:89: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    comp_data = company.dict()
+
+tests/test_company.py::test_create_company_success
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:104: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_company.py::test_update_company_success
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:172: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    update_data = company_update.dict()
+
+tests/test_company.py::test_upload_companies_csv
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:262: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_employee.py::test_update_employee_success
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:184: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    update_data = employee_update.dict()
+
+tests/test_employee.py::test_upload_employees_csv
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:366: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_extra.py::test_accept_offer
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\offer_response.py:295: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "offer_responded_at": datetime.utcnow(),
+
+tests/test_extra.py::test_send_offer_email_missing_pdf
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\services\email_service.py:60: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow()
+
+tests/test_letters.py::test_generate_offer_letter
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\letter.py:109: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "generated_on": datetime.utcnow()
+
+tests/test_letters.py::test_generate_agreement_letter
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_letter.py:60: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "generated_on": datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::test_cors_headers - assert 405 == 200
+FAILED tests/test_employee.py::test_upload_employees_invalid_format - assert ...
+FAILED tests/test_extra.py::test_reject_offer - AssertionError: assert 'Offer...
+FAILED tests/test_extra.py::test_upload_signature - assert 404 in [200, 400]
+FAILED tests/test_extra.py::test_upload_signature_invalid_format - assert 404...
+FAILED tests/test_extra.py::test_send_offer_email_missing_pdf - assert 200 in...
+================== 6 failed, 52 passed, 22 warnings in 6.19s ==================
