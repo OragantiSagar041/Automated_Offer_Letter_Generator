@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 
 const COMPANY_TEMPLATES = [
     { label: 'Arah Infotech', value: '/Arah_Template.pdf', defaultName: 'Arah Infotech Pvt Ltd' },
@@ -56,8 +57,8 @@ const AgreementBulkSendModal = ({ selectedCount, onClose, onConfirm }) => {
                     &times;
                 </button>
 
-                <h2 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-primary)', fontSize: '1.3rem' }}>
-                    Bulk Draft Settings
+                <h2 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-primary)', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={20} style={{ color: 'var(--accent-color)' }} /> Bulk Draft Settings
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                     Generating and sending <strong>{selectedCount}</strong> agreements.

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { API_URL } from '../config';
+import { 
+  User, Briefcase, IndianRupee, ArrowRight, 
+  Download, ChevronDown 
+} from 'lucide-react';
 
 const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null, error = false }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -35,8 +39,8 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
                 >
                     {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
-                    ▼
+                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)', display: 'flex' }}>
+                    <ChevronDown size={18} />
                 </div>
             </div>
         ) : (
@@ -204,7 +208,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                 display: 'inline-flex', alignItems: 'center', gap: '8px'
                             }}
                         >
-                            📥 Download Bulk Import Template
+                            <Download size={16} /> Download Bulk Import Template
                         </button>
                     </div>
                 )}
@@ -214,7 +218,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                     {/* Sections with subtle backgrounds */}
                     <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '1.4rem' }}>👤</span>
+                            <User size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Personal Information</span>
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
@@ -235,8 +239,8 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
 
                     <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '1.4rem' }}>💼</span>
-                            <span style={{ borderBottom: '2px solid #10b981', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
+                            <Briefcase size={20} style={{ color: 'var(--accent-color)' }} />
+                            <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                             <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required disabled={isViewOnly} />
@@ -253,8 +257,8 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}
                         >
                             <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '1.4rem' }}>₹</span>
-                                <span style={{ borderBottom: '2px solid #f59e0b', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
+                                <IndianRupee size={20} style={{ color: 'var(--accent-color)' }} />
+                                <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required disabled={isViewOnly} />
@@ -370,7 +374,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
                                 {initialData ? 'Apply Updates' : 'Onboard Employee'}
-                                <span style={{ fontSize: '1.3rem' }}>→</span>
+                                <ArrowRight size={20} />
                             </button>
                         )}
                     </div>

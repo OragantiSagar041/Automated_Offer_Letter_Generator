@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { API_URL } from '../config';
+import { Building2, ArrowRight, ChevronDown, Download } from 'lucide-react';
 
 const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, disabled, required = false, options = null, error = false }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -35,8 +36,8 @@ const InputGroup = ({ label, name, type = "text", placeholder, value, onChange, 
                 >
                     {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
-                    ▼
+                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)', display: 'flex' }}>
+                    <ChevronDown size={18} />
                 </div>
             </div>
         ) : (
@@ -200,7 +201,7 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2.5rem' }}>
                     <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '1.4rem' }}>🏢</span>
+                            <Building2 size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Company Information</span>
                         </h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
@@ -242,6 +243,21 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', paddingTop: '2rem', borderTop: '2px solid var(--border-color)' }}>
+                        <button type="button" onClick={() => window.open(`${API_URL}/agreement-companies/template`)} style={{
+                            padding: '16px',
+                            background: 'transparent',
+                            border: '2px solid var(--success-text)',
+                            color: 'var(--success-text)',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                             <Download size={18} /> Template
+                        </button>
                         <button type="button" onClick={onClose} style={{
                             flex: 1,
                             padding: '16px',
@@ -281,7 +297,7 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
                                 {initialData ? 'Apply Updates' : 'Add Company'}
-                                <span style={{ fontSize: '1.3rem' }}>→</span>
+                                <ArrowRight size={20} />
                             </button>
                         )}
                     </div>

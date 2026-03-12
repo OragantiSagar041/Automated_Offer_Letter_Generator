@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { generateOfferLetterPdf } from '../utils/offerLetterPdfGenerator';
 import { API_URL } from '../config';
+import { 
+  Sparkles, X, UploadCloud, FileText, Send, 
+  Download, AlignLeft, AlignCenter, AlignRight, Pencil 
+} from 'lucide-react';
 
 const COMPANY_NAMES = {
     '/Arah_Template.jpg': 'Arah Infotech Pvt Ltd',
@@ -108,9 +112,9 @@ const EditableContent = ({ initialContent, onChange }) => {
 
                 <div style={{ width: '1px', height: '20px', background: 'var(--border-color)', margin: '0 4px' }} />
 
-                <button onClick={() => execCmd('justifyLeft')} style={getBtnStyle(activeFormats.justifyLeft)} title="Align Left">⬅️</button>
-                <button onClick={() => execCmd('justifyCenter')} style={getBtnStyle(activeFormats.justifyCenter)} title="Align Center">⬇️</button>
-                <button onClick={() => execCmd('justifyRight')} style={getBtnStyle(activeFormats.justifyRight)} title="Align Right">➡️</button>
+                <button onClick={() => execCmd('justifyLeft')} style={getBtnStyle(activeFormats.justifyLeft)} title="Align Left"><AlignLeft size={16} /></button>
+                <button onClick={() => execCmd('justifyCenter')} style={getBtnStyle(activeFormats.justifyCenter)} title="Align Center"><AlignCenter size={16} /></button>
+                <button onClick={() => execCmd('justifyRight')} style={getBtnStyle(activeFormats.justifyRight)} title="Align Right"><AlignRight size={16} /></button>
             </div>
 
             {/* EDITOR */}
@@ -385,8 +389,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 {/* COMPACT THEMED HEADER */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: 700 }}>
-                            <span style={{ color: 'var(--accent-color)' }}>✨</span> Document Workshop: {employee.name}
+                        <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Sparkles size={18} style={{ color: 'var(--accent-color)' }} /> Document Workshop: {employee.name}
                         </h2>
                     </div>
                     <button
@@ -404,7 +408,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)'
                         }}
                     >
-                        ×
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -458,10 +462,10 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             background: 'var(--bg-secondary)',
                             color: 'var(--text-secondary)', border: '1px dashed var(--border-color)',
                             padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
-                            fontSize: '0.85rem', fontWeight: 600
+                            fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
                         }}
                     >
-                        📤 Custom Template
+                        <UploadCloud size={16} /> Custom Template
                     </button>
 
                     <button
@@ -471,10 +475,11 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             background: loading ? 'var(--border-color)' : 'var(--accent-color)',
                             color: 'white', border: 'none', padding: '10px 24px',
                             borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
-                            minWidth: '140px', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)'
+                            minWidth: '140px', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)',
+                            display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'
                         }}
                     >
-                        {loading ? 'AI Working...' : '✨ Generate AI Draft'}
+                        {loading ? 'AI Working...' : <><Sparkles size={18} /> Generate AI Draft</>}
                     </button>
                 </div>
 
@@ -496,8 +501,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
                     {generatedContent && !loading && (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                            <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                ✏️ Rich Text Editor <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>(Auto-Syncing)</span>
+                            <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Pencil size={14} /> Rich Text Editor <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>(Auto-Syncing)</span>
                             </div>
                             <div style={{ flex: 1, overflowY: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', position: 'relative', padding: '10px' }}>
                                 <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -545,24 +550,26 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
-                            <button
+                             <button
                                 onClick={handleDownloadPDF}
                                 style={{
                                     background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
-                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem'
+                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem',
+                                    display: 'flex', alignItems: 'center', gap: '8px'
                                 }}
                             >
-                                ⬇️ Archive PDF
+                                <Download size={18} /> Archive PDF
                             </button>
                             <button
                                 id="emailBtn"
                                 onClick={handleSendEmail}
                                 style={{
                                     background: 'var(--accent-color)', border: 'none', color: 'white',
-                                    padding: '12px 28px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)'
+                                    padding: '12px 28px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)',
+                                    display: 'flex', alignItems: 'center', gap: '8px'
                                 }}
                             >
-                                ✉️ Dispatch to Candidate
+                                <Send size={18} /> Dispatch to Candidate
                             </button>
                         </div>
                     </div>

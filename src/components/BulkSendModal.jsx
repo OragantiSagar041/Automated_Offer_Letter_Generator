@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Sparkles, Send } from 'lucide-react';
 
 const COMPANY_NAMES = {
     '/Arah_Template.jpg': 'Arah Infotech Pvt Ltd',
@@ -40,8 +41,8 @@ const BulkSendModal = ({ selectedCount, onClose, onStart }) => {
                     boxShadow: 'var(--card-shadow)'
                 }}
             >
-                <h2 style={{ marginTop: 0, fontSize: '1.8rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-                    🚀 Bulk Output Setup
+                <h2 style={{ marginTop: 0, fontSize: '1.8rem', color: 'var(--text-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Sparkles style={{ color: 'var(--accent-color)' }} /> Bulk Output Setup
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
                     You are generating letters for <strong>{selectedCount}</strong> candidate(s). Choose your preferred background templates.
