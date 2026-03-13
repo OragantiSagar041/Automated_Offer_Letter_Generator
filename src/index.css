@@ -179,38 +179,88 @@ input[type="number"] {
   }
   
   .stats-grid {
-    gap: 1rem !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.75rem !important;
+    padding-bottom: 0.5rem;
+  }
+  
+  .stats-grid > div {
+    flex: 0 0 140px !important;
+    padding: 0.75rem !important;
+    height: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  .stats-grid h3 {
+    margin-bottom: 2px !important;
+    font-size: 0.6rem !important;
+  }
+  
+  .stats-grid p {
+    font-size: 1.1rem !important;
+    margin: 0 !important;
+  }
+  
+  .stats-grid .icon-box {
+    display: none !important; /* Hide icons in compact mobile view to save space */
   }
   
   .card-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .card-grid > div {
+    padding: 0.75rem !important;
+    min-height: 120px !important;
+  }
+  
+  .card-grid h3 {
+    font-size: 0.9rem !important;
   }
   
   .toolbar {
     width: 100% !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px !important;
+    padding: 0.5rem !important;
+  }
+  
+  .toolbar > * {
+    flex-shrink: 0 !important;
   }
   
   .modal-content {
-    padding: 1.5rem !important;
-    border-radius: 20px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
+    padding: 1rem !important;
+    border-radius: 16px !important;
+    width: 95% !important;
+    max-width: 95% !important;
+    height: auto !important;
+    max-height: 95vh !important;
+    margin: 10px !important;
   }
 
   /* Stack tab switcher buttons on small mobile */
   .tab-switcher {
-    flex-direction: column !important;
-    width: 100% !important;
+    flex-direction: row !important;
+    width: fit-content !important;
+    margin: 0 auto !important;
   }
   
   .tab-switcher button {
-    width: 100% !important;
-    justify-content: center !important;
+    width: auto !important;
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
   }
 }
 
@@ -259,8 +309,27 @@ input[type="number"] {
 }
 
 @media (max-width: 768px) {
-  .split-screen, .stack-on-mobile {
-    flex-direction: column !important;
+  .split-screen {
+    flex-direction: row !important;
+    display: flex !important;
+    width: 200% !important; /* Allow side-by-side by making container wider */
+    transition: transform 0.3s ease;
+  }
+  
+  .split-screen > div {
+    width: 50vw !important; /* Each takes half of the 200% width which is 100vw? No, 50% of the container? */
+    min-width: 100vw !important; /* Force each to be full screen width */
+  }
+
+  /* Custom scroll for split screen */
+  .split-screen-container {
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .split-screen > div {
+    scroll-snap-align: start;
   }
 }
 

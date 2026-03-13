@@ -302,7 +302,7 @@ function App() {
   const selectedBg = theme === 'dark' ? 'rgba(56, 189, 248, 0.1)' : 'var(--accent-soft)';
 
   return (
-    <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative' }}>
 
       {/* THEME TOGGLE */}
       <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 1100 }}>
@@ -342,9 +342,9 @@ function App() {
               { label: 'Rejected', val: offerStats.rejected, color: 'var(--error-text)', icon: <XCircle size={20} /> },
               { label: 'Pending', val: offerStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div className="icon-box" style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>{s.label}</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}
@@ -543,9 +543,9 @@ function App() {
               { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
               { label: 'Pending', val: agStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div className="icon-box" style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>{s.label}</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}

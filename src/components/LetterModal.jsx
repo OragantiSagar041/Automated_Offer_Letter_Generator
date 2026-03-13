@@ -378,12 +378,13 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
                     background: 'var(--bg-secondary)',
-                    padding: '0.75rem',
-                    width: '100vw',
-                    height: '100vh',
+                    width: '100%',
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     border: 'none',
+                    borderRadius: '0',
+                    padding: '0.5rem',
                 }}
             >
                 {/* COMPACT THEMED HEADER */}
@@ -484,7 +485,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 </div>
 
                 {/* SPLIT SCREEN area */}
-                <div className="split-screen" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="split-screen-container" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem' }}>
 
                     {!generatedContent && !loading && (
                         <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
@@ -506,7 +508,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             </div>
                             <div style={{ flex: 1, overflowY: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', position: 'relative', padding: '10px' }}>
                                 <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{ transform: 'scale(0.75)', transformOrigin: 'top center', width: '100%', height: '134%', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
                                         <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
                                     </div>
                                 </div>
@@ -529,6 +531,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             </div>
                         </div>
                     )}
+                    </div>
                 </div>
 
                 {/* FOOTER */}
