@@ -484,7 +484,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 </div>
 
                 {/* SPLIT SCREEN area */}
-                <div style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden' }}>
+                <div className="split-screen" style={{ flex: 1, overflow: 'hidden' }}>
 
                     {!generatedContent && !loading && (
                         <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
@@ -533,7 +533,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
 
                 {/* FOOTER */}
                 {generatedContent && (
-                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
+                    <div className="stack-on-mobile" style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
                                 📧 Messaging:
@@ -549,7 +549,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
+                        <div className="stack-on-mobile" style={{ alignItems: 'flex-end' }}>
                              <button
                                 onClick={handleDownloadPDF}
                                 style={{

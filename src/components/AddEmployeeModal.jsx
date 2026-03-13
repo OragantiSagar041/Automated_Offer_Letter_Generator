@@ -169,16 +169,11 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
             <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="modal-content"
                 style={{
-                    background: 'var(--card-bg)',
-                    padding: '3rem',
-                    borderRadius: '32px',
                     width: '1000px',
                     maxWidth: '95vw',
                     maxHeight: '90vh',
-                    overflowY: 'auto',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--card-shadow)'
                 }}
             >
                 {/* Header */}
@@ -221,17 +216,17 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             <User size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Personal Information</span>
                         </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
-                            <div style={{ gridColumn: 'span 4' }}>
+                        <div className="responsive-grid" style={{ alignItems: 'end' }}>
+                            <div className="span-4">
                                 <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 8' }}>
+                            <div className="span-8">
                                 <InputGroup label="Full Name" name="name" placeholder="e.g. Sarah Connor" value={formData.name} onChange={handleChange} error={errors.name} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 8' }}>
+                            <div className="span-8">
                                 <InputGroup label="Email Address" name="email" type="email" placeholder="sarah@corp.com" value={formData.email} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 4' }}>
+                            <div className="span-4">
                                 <InputGroup label="Joining Date" name="joining_date" type="date" value={formData.joining_date} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
                         </div>
@@ -242,7 +237,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             <Briefcase size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
                         </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div className="responsive-grid">
                             <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required disabled={isViewOnly} />
                             <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} error={errors.department} required disabled={isViewOnly} />
                             <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} disabled={isViewOnly} />
@@ -260,11 +255,11 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                 <IndianRupee size={20} style={{ color: 'var(--accent-color)' }} />
                                 <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div className="responsive-grid">
                                 <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required disabled={isViewOnly} />
                                 <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                            <div className="responsive-grid" style={{ marginTop: '1.5rem' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', color: 'var(--text-muted)' }}>
                                         PT (Monthly) (₹) <span style={{ color: '#ef4444' }}>*</span>

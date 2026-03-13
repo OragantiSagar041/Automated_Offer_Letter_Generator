@@ -302,7 +302,7 @@ function App() {
   const selectedBg = theme === 'dark' ? 'rgba(56, 189, 248, 0.1)' : 'var(--accent-soft)';
 
   return (
-    <div className="container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
 
       {/* THEME TOGGLE */}
       <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 1100 }}>
@@ -319,7 +319,7 @@ function App() {
 
       {/* TAB SWITCHER */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
-        <div style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        <div className="tab-switcher" style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           {[
             { key: 'offer', label: 'Offer Letters', icon: <FileText size={18} /> },
             { key: 'agreement', label: 'Agreements', icon: <Handshake size={18} /> }
@@ -334,7 +334,7 @@ function App() {
       {activeTab === 'offer' ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* STATS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
             {[
               { label: 'Total', val: offerStats.total, color: 'var(--accent-color)', icon: <Users size={20} /> },
               { label: 'Sent', val: offerStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
@@ -351,7 +351,7 @@ function App() {
           </div>
 
           {/* TOOLBAR */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', width: 'fit-content', flexWrap: 'nowrap' }}>
+          <div className="toolbar">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Offer Sent', 'Accepted', 'Rejected'].map(s => (
@@ -421,7 +421,7 @@ function App() {
               No employees found matching your filters.
             </div>
           ) : viewMode === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+            <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
               {filteredEmployees.map(emp => (
                 <div key={emp.id} style={{ 
                   background: selectedIds.has(emp.id) ? selectedBg : 'var(--card-bg)', 
@@ -483,7 +483,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
+            <div className="table-container">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                   <thead style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -537,7 +537,7 @@ function App() {
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* AGREEMENT TAB CONTENT */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
             {[
               { label: 'Total Companies', val: agStats.total, color: 'var(--accent-color)', icon: <Handshake size={20} /> },
               { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
@@ -552,7 +552,7 @@ function App() {
           </div>
 
           {/* TOOLBAR */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', width: 'fit-content', flexWrap: 'nowrap' }}>
+          <div className="toolbar">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Agreement Sent'].map(s => (
@@ -624,7 +624,7 @@ function App() {
               No companies found matching your filters.
             </div>
           ) : agViewMode === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+            <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
               {filteredCompanies.map(co => (
                 <div key={co.id} style={{ 
                   background: agSelectedIds.has(co.id) ? selectedBg : 'var(--card-bg)', 
@@ -681,7 +681,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
+            <div className="table-container">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                   <thead style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
