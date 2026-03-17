@@ -358,8 +358,9 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
             zIndex: 3000
         }}>
             <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
                 style={{
                     background: 'var(--bg-secondary)',
                     padding: '0.75rem',
@@ -368,6 +369,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     border: 'none',
+                    borderRadius: 0,
                 }}
             >
                 {/* COMPACT THEMED HEADER */}
@@ -462,7 +464,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                 </div>
 
                 {/* SPLIT SCREEN area */}
-                <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden' }}>
+                <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden', minHeight: 0 }}>
 
                     {!generatedContent && !loading && (
                         <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
@@ -478,22 +480,18 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                     )}
 
                     {generatedContent && !loading && (
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
                             <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <Pencil size={14} /> Rich Text Editor <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>(Auto-Syncing)</span>
                             </div>
-                            <div style={{ flex: 1, overflowY: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', position: 'relative', padding: '10px' }}>
-                                <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
-                                    <div style={{ transform: 'scale(0.75)', transformOrigin: 'top center', width: '100%', height: '134%', display: 'flex', justifyContent: 'center' }}>
-                                        <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
-                                    </div>
-                                </div>
+                            <div style={{ flex: 1, borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                                <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
                             </div>
                         </div>
                     )}
 
                     {generatedContent && !loading && (
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
                             <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between' }}>
                                 <span>📄 PDF Synchronizer (75%)</span>
                                 {isGeneratingPdf && <span style={{ color: 'var(--accent-color)', animation: 'pulse 1s infinite' }}>● Syncing</span>}
@@ -529,7 +527,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
 
                 {/* FOOTER */}
                 {generatedContent && (
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', flexShrink: 0 }}>
                         <div style={{ flex: '1 1 300px' }}>
                             <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
                                 📧 Messaging:

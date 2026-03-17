@@ -374,8 +374,9 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
             zIndex: 3000
         }}>
             <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
                 style={{
                     background: 'var(--bg-secondary)',
                     padding: '0.75rem',
@@ -384,6 +385,7 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     border: 'none',
+                    borderRadius: 0,
                 }}
             >
                 {/* COMPACT THEMED HEADER */}
@@ -483,8 +485,8 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                 </div>
 
                 {/* SPLIT SCREEN area */}
-                <div className="split-screen-container" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem' }}>
+                <div className="split-screen-container" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem', minHeight: 0, overflow: 'hidden' }}>
 
                         {!generatedContent && !loading && (
                             <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
@@ -500,22 +502,18 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                         )}
 
                         {generatedContent && !loading && (
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
                                 <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Pencil size={14} /> Rich Text Editor <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>(Auto-Syncing)</span>
                                 </div>
-                                <div style={{ flex: 1, overflowY: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', position: 'relative', padding: '10px' }}>
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
-                                        <div style={{ transform: 'scale(0.75)', transformOrigin: 'top center', width: '100%', height: '134%', display: 'flex', justifyContent: 'center' }}>
-                                            <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
-                                        </div>
-                                    </div>
+                                <div style={{ flex: 1, borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                                    <EditableContent initialContent={generatedContent} onChange={setGeneratedContent} />
                                 </div>
                             </div>
                         )}
 
                         {generatedContent && !loading && (
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
                                 <div style={{ marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between' }}>
                                     <span>📄 PDF Synchronizer ({pdfUrl ? '100% ✓' : 'Rendering...'})</span>
                                     {isGeneratingPdf && <span style={{ color: 'var(--accent-color)', animation: 'pulse 1s infinite' }}>● Syncing</span>}
@@ -530,50 +528,51 @@ const LetterModal = ({ employee, onClose, onSuccess }) => {
                             </div>
                         )}
                     </div>
+                </div>{/* END split-screen-container */}
 
-                    {/* FOOTER */}
-                    {generatedContent && (
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
-                            <div style={{ flex: '1 1 300px' }}>
-                                <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
-                                    📧 Messaging:
-                                </label>
-                                <textarea
-                                    value={emailBody}
-                                    onChange={e => setEmailBody(e.target.value)}
-                                    style={{
-                                        width: '100%', height: '80px', borderRadius: '10px',
-                                        background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
-                                        padding: '12px', fontSize: '0.9rem', resize: 'none', outline: 'none'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flex: '1 1 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                                <button
-                                    onClick={handleDownloadPDF}
-                                    style={{
-                                        background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
-                                        padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
-                                        display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
-                                    }}
-                                >
-                                    <Download size={18} /> <span className="hide-mobile">Download</span> PDF
-                                </button>
-                                <button
-                                    id="emailBtn"
-                                    onClick={handleSendEmail}
-                                    style={{
-                                        background: 'var(--accent-color)', border: 'none', color: 'white',
-                                        padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: 'var(--card-shadow)',
-                                        display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
-                                    }}
-                                >
-                                    <Send size={18} /> <span className="hide-mobile">Send Email</span>
-                                </button>
-                            </div>
+                {/* FOOTER - outside split-screen so it's always visible */}
+                {generatedContent && (
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', flexShrink: 0 }}>
+                        <div style={{ flex: '1 1 300px' }}>
+                            <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
+                                📧 Messaging:
+                            </label>
+                            <textarea
+                                value={emailBody}
+                                onChange={e => setEmailBody(e.target.value)}
+                                style={{
+                                    width: '100%', height: '80px', borderRadius: '10px',
+                                    background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
+                                    padding: '12px', fontSize: '0.9rem', resize: 'none', outline: 'none'
+                                }}
+                            />
                         </div>
-                    )}
+
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flex: '1 1 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={handleDownloadPDF}
+                                style={{
+                                    background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
+                                    padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                                    display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
+                                }}
+                            >
+                                <Download size={18} /> <span className="hide-mobile">Download</span> PDF
+                            </button>
+                            <button
+                                id="emailBtn"
+                                onClick={handleSendEmail}
+                                style={{
+                                    background: 'var(--accent-color)', border: 'none', color: 'white',
+                                    padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: 'var(--card-shadow)',
+                                    display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
+                                }}
+                            >
+                                <Send size={18} /> <span className="hide-mobile">Send Email</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </motion.div>
         </div>
     );
