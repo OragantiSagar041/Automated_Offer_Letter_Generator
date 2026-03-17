@@ -172,6 +172,7 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 className="modal-content"
                 style={{
+<<<<<<< HEAD
                     background: 'var(--card-bg)',
                     width: '800px',
                     maxWidth: '95vw',
@@ -181,6 +182,11 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                     boxShadow: 'var(--card-shadow)',
                     padding: '3rem',
                     borderRadius: '32px'
+=======
+                    width: '800px',
+                    maxWidth: '95vw',
+                    maxHeight: '90vh',
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
                 }}
             >
                 {/* Header */}
@@ -205,22 +211,28 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             <Building2 size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Company Information</span>
                         </h3>
+<<<<<<< HEAD
                         <div className="form-grid-12">
                             <div style={{ gridColumn: 'span 6' }}>
+=======
+                        <div className="responsive-grid" style={{ alignItems: 'end' }}>
+                            <div className="span-6">
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
                                 <InputGroup label="Company Name" name="name" placeholder="e.g. Arah Infotech" value={formData.name} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 6' }}>
+                            <div className="span-6">
                                 <InputGroup label="Email Contact" name="email" type="email" placeholder="contact@arah.com" value={formData.email} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 6' }}>
+                            <div className="span-6">
                                 <InputGroup label="Date of Agreement" name="joining_date" type="date" value={formData.joining_date} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 6' }}>
+                            <div className="span-6">
                                 <InputGroup label="Compensation %" name="percentage" type="number" placeholder="8.33" value={formData.percentage} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 12' }}>
+                            <div className="span-12">
                                 <InputGroup label="Registered Office Address" name="address" placeholder="123 Tech Park, Hyderabad" value={formData.address} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
+<<<<<<< HEAD
 
                             <div style={{ gridColumn: 'span 4' }}>
                                 <InputGroup label="Replacement (Days)" name="replacement" type="number" placeholder="e.g. 60" value={formData.replacement} onChange={handleChange} required disabled={isViewOnly} />
@@ -233,9 +245,25 @@ const AddCompanyModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             </div>
 
                             <div style={{ gridColumn: 'span 6' }}>
+=======
+                        </div>
+                        <div className="responsive-grid" style={{ alignItems: 'end' }}>
+                            <div className="span-4">
+                                <InputGroup label="Replacement Period (Days)" name="replacement" type="number" placeholder="e.g. 60" value={formData.replacement} onChange={handleChange} required disabled={isViewOnly} />
+                            </div>
+                            <div className="span-4">
+                                <InputGroup label="Invoice Post Joining (Days)" name="invoice_post_joining" type="number" placeholder="e.g. 45" value={formData.invoice_post_joining} onChange={handleChange} required disabled={isViewOnly} />
+                            </div>
+                            <div className="span-4">
+                                <InputGroup label="Payment Release (Days)" name="payment_release" type="number" placeholder="e.g. 15" value={formData.payment_release} onChange={handleChange} required disabled={isViewOnly} />
+                            </div>
+                        </div>
+                        <div className="responsive-grid" style={{ alignItems: 'end' }}>
+                            <div className="span-6">
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
                                 <InputGroup label="Signatory Name" name="sig_name" placeholder="e.g. Navya S" value={formData.sig_name} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ gridColumn: 'span 6' }}>
+                            <div className="span-6">
                                 <InputGroup label="Designation" name="sig_designation" placeholder="e.g. Managing Director" value={formData.sig_designation} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
                         </div>

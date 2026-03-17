@@ -31,14 +31,10 @@ const BulkSendModal = ({ selectedCount, onClose, onStart }) => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
+                className="modal-content"
                 style={{
-                    background: 'var(--card-bg)',
-                    padding: '2.5rem',
-                    borderRadius: '24px',
                     width: '500px',
-                    maxWidth: '90vw',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--card-shadow)'
+                    maxWidth: '95vw',
                 }}
             >
                 <h2 style={{ marginTop: 0, fontSize: '1.8rem', color: 'var(--text-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -302,7 +302,11 @@ function App() {
   const selectedBg = theme === 'dark' ? 'rgba(56, 189, 248, 0.1)' : 'var(--accent-soft)';
 
   return (
+<<<<<<< HEAD
     <div className="container" style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+=======
+    <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
 
       {/* THEME TOGGLE */}
       <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1100 }}>
@@ -318,7 +322,11 @@ function App() {
       </header>
 
       {/* TAB SWITCHER */}
+<<<<<<< HEAD
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+=======
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
         <div className="tab-switcher" style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           {[
             { key: 'offer', label: 'Offer Letters', icon: <FileText size={18} /> },
@@ -334,7 +342,11 @@ function App() {
       {activeTab === 'offer' ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* STATS */}
+<<<<<<< HEAD
           <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+=======
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
             {[
               { label: 'Total', val: offerStats.total, color: 'var(--accent-color)', icon: <Users size={20} /> },
               { label: 'Sent', val: offerStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
@@ -342,17 +354,22 @@ function App() {
               { label: 'Rejected', val: offerStats.rejected, color: 'var(--error-text)', icon: <XCircle size={20} /> },
               { label: 'Pending', val: offerStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div className="icon-box" style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>{s.label}</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}
           </div>
 
           {/* TOOLBAR */}
+<<<<<<< HEAD
           <div className="toolbar-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
             <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+=======
+          <div className="toolbar">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Offer Sent', 'Accepted', 'Rejected'].map(s => (
                   <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: filterStatus === s ? 'var(--card-bg)' : 'transparent', color: filterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
@@ -421,7 +438,11 @@ function App() {
               No employees found matching your filters.
             </div>
           ) : viewMode === 'grid' ? (
+<<<<<<< HEAD
             <div className="responsive-grid">
+=======
+            <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
               {filteredEmployees.map(emp => (
                 <div key={emp.id} style={{
                   background: selectedIds.has(emp.id) ? selectedBg : 'var(--card-bg)',
@@ -482,7 +503,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
+            <div className="table-container">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                   <thead style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -536,23 +557,32 @@ function App() {
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* AGREEMENT TAB CONTENT */}
+<<<<<<< HEAD
           <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+=======
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
             {[
               { label: 'Total Companies', val: agStats.total, color: 'var(--accent-color)', icon: <Handshake size={20} /> },
               { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
               { label: 'Pending', val: agStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div className="icon-box" style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>{s.label}</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}
           </div>
 
           {/* TOOLBAR */}
+<<<<<<< HEAD
           <div className="toolbar-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
             <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+=======
+          <div className="toolbar">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Agreement Sent'].map(s => (
                   <button key={s} onClick={() => setAgFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: agFilterStatus === s ? 'var(--card-bg)' : 'transparent', color: agFilterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
@@ -623,7 +653,11 @@ function App() {
               No companies found matching your filters.
             </div>
           ) : agViewMode === 'grid' ? (
+<<<<<<< HEAD
             <div className="responsive-grid">
+=======
+            <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+>>>>>>> 27031f6e6ab4f02efb6bea2d544f0436225a90a9
               {filteredCompanies.map(co => (
                 <div key={co.id} style={{
                   background: agSelectedIds.has(co.id) ? selectedBg : 'var(--card-bg)',
@@ -677,7 +711,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{ background: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--card-shadow)' }}>
+            <div className="table-container">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                   <thead style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
