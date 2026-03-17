@@ -37,10 +37,13 @@ const AgreementBulkSendModal = ({ selectedCount, onClose, onConfirm }) => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="modal-content"
                 style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '2rem',
+                    borderRadius: '16px',
                     width: '400px',
-                    maxWidth: '95vw',
+                    boxShadow: 'var(--card-shadow)',
+                    position: 'relative'
                 }}
             >
                 <button
