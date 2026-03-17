@@ -334,18 +334,18 @@ function App() {
       {activeTab === 'offer' ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* STATS */}
-          <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+          <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
             {[
-              { label: 'Total', val: offerStats.total, color: 'var(--accent-color)', icon: <Users size={20} /> },
-              { label: 'Sent', val: offerStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
-              { label: 'Accepted', val: offerStats.accepted, color: 'var(--success-text)', icon: <CheckCircle size={20} /> },
-              { label: 'Rejected', val: offerStats.rejected, color: 'var(--error-text)', icon: <XCircle size={20} /> },
-              { label: 'Pending', val: offerStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
+              { label: 'Total', val: offerStats.total, color: 'var(--accent-color)', icon: <Users size={16} /> },
+              { label: 'Sent', val: offerStats.sent, color: 'var(--accent-color)', icon: <Send size={16} /> },
+              { label: 'Accepted', val: offerStats.accepted, color: 'var(--success-text)', icon: <CheckCircle size={16} /> },
+              { label: 'Rejected', val: offerStats.rejected, color: 'var(--error-text)', icon: <XCircle size={16} /> },
+              { label: 'Pending', val: offerStats.pending, color: 'var(--pending-text)', icon: <Clock size={16} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
-                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
+                <div style={{ color: s.color, marginBottom: '0.25rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}
           </div>
@@ -536,16 +536,16 @@ function App() {
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* AGREEMENT TAB CONTENT */}
-          <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+          <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
             {[
-              { label: 'Total Companies', val: agStats.total, color: 'var(--accent-color)', icon: <Handshake size={20} /> },
-              { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
-              { label: 'Pending', val: agStats.pending, color: 'var(--pending-text)', icon: <Clock size={20} /> }
+              { label: 'Total Companies', val: agStats.total, color: 'var(--accent-color)', icon: <Handshake size={16} /> },
+              { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={16} /> },
+              { label: 'Pending', val: agStats.pending, color: 'var(--pending-text)', icon: <Clock size={16} /> }
             ].map((s, i) => (
-              <div key={i} style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ color: s.color, marginBottom: '0.5rem' }}>{s.icon}</div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
-                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
+              <div key={i} style={{ background: 'var(--card-bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
+                <div style={{ color: s.color, marginBottom: '0.25rem' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.val}</p>
               </div>
             ))}
           </div>
