@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { generatePdfWithTemplate } from '../utils/pdfTemplateGenerator';
 import { API_URL } from '../config';
-import { 
-  Sparkles, X, UploadCloud, FileText, Send, 
-  Download, AlignLeft, AlignCenter, AlignRight, Pencil 
+import {
+    Sparkles, X, UploadCloud, FileText, Send,
+    Download, AlignLeft, AlignCenter, AlignRight, Pencil
 } from 'lucide-react';
 
 const COMPANY_NAMES = {
@@ -397,7 +397,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                 </div>
 
                 {/* THEMED CONTROLS */}
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap', background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '12px' }}>
                     <input
                         type="text"
                         placeholder="Company Name"
@@ -405,7 +405,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                         onChange={(e) => setCompanyName(e.target.value)}
                         style={{
                             padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
-                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none', minWidth: '200px'
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: '1 1 200px', fontSize: '0.9rem', outline: 'none'
                         }}
                     />
 
@@ -414,7 +414,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                         onChange={(e) => setLetterType(e.target.value)}
                         style={{
                             padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
-                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: '1 1 120px', fontSize: '0.9rem', outline: 'none'
                         }}
                     >
                         <option>Agreement</option>
@@ -425,7 +425,7 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                         onChange={(e) => setSelectedTemplate(e.target.value)}
                         style={{
                             padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-primary)',
-                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.9rem', outline: 'none'
+                            color: 'var(--text-primary)', border: '1px solid var(--border-color)', flex: '1 1 150px', fontSize: '0.9rem', outline: 'none'
                         }}
                     >
                         <option value="/Arah_Template.pdf">Arah Infotech</option>
@@ -438,13 +438,12 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                     <button
                         onClick={() => fileInputRef.current.click()}
                         style={{
-                            background: 'var(--bg-secondary)',
-                            color: 'var(--text-secondary)', border: '1px dashed var(--border-color)',
-                            padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
-                            fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
+                            background: 'var(--bg-secondary)', border: '1px dashed var(--border-color)',
+                            color: 'var(--text-secondary)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
                         }}
                     >
-                        <UploadCloud size={16} /> Custom Template
+                        <UploadCloud size={16} /> <span className="hide-mobile">Custom</span> Template
                     </button>
 
                     <button
@@ -454,16 +453,16 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                             background: loading ? 'var(--border-color)' : 'var(--accent-color)',
                             color: 'white', border: 'none', padding: '10px 24px',
                             borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
-                            minWidth: '140px', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)',
+                            flex: '1 1 200px', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)',
                             display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'
                         }}
                     >
-                        {loading ? 'AI Working...' : <><Sparkles size={18} /> Generate AI Draft</>}
+                        {loading ? 'AI Working...' : <><Sparkles size={18} /> Generate Draft</>}
                     </button>
                 </div>
 
                 {/* SPLIT SCREEN area */}
-                <div style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden' }}>
+                <div className="split-screen" style={{ flex: 1, display: 'flex', gap: '1rem', overflow: 'hidden' }}>
 
                     {!generatedContent && !loading && (
                         <div style={{ flex: 1, background: 'var(--bg-tertiary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)' }}>
@@ -530,8 +529,8 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
 
                 {/* FOOTER */}
                 {generatedContent && (
-                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
-                        <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 300px' }}>
                             <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
                                 📧 Messaging:
                             </label>
@@ -539,44 +538,44 @@ const AgreementLetterModal = ({ employee, onClose, onSuccess }) => {
                                 value={emailBody}
                                 onChange={e => setEmailBody(e.target.value)}
                                 style={{
-                                    width: '100%', height: '100px', borderRadius: '10px',
+                                    width: '100%', height: '80px', borderRadius: '10px',
                                     background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
                                     padding: '12px', fontSize: '0.9rem', resize: 'none', outline: 'none'
                                 }}
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flex: '1 1 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                             <button
                                 onClick={handleDownloadDOCX}
                                 style={{
                                     background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
-                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem',
-                                    display: 'flex', alignItems: 'center', gap: '8px'
+                                    padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                                    display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
                                 }}
                             >
-                                <Download size={18} /> Archive DOCX
+                                <Download size={18} /> <span className="hide-mobile">Words</span> DOCX
                             </button>
                             <button
                                 onClick={handleDownloadPDF}
                                 style={{
                                     background: 'var(--bg-secondary)', border: '2px solid var(--accent-color)', color: 'var(--accent-color)',
-                                    padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem',
-                                    display: 'flex', alignItems: 'center', gap: '8px'
+                                    padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                                    display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
                                 }}
                             >
-                                <Download size={18} /> Archive PDF
+                                <Download size={18} /> <span className="hide-mobile">PDF</span>
                             </button>
                             <button
                                 id="agreementEmailBtn"
                                 onClick={handleSendEmail}
                                 style={{
                                     background: 'var(--accent-color)', border: 'none', color: 'white',
-                                    padding: '12px 28px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', boxShadow: 'var(--card-shadow)',
-                                    display: 'flex', alignItems: 'center', gap: '8px'
+                                    padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: 'var(--card-shadow)',
+                                    display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', justifyContent: 'center'
                                 }}
                             >
-                                <Send size={18} /> Dispatch to Partner
+                                <Send size={18} /> <span className="hide-mobile">Send Email</span>
                             </button>
                         </div>
                     </div>

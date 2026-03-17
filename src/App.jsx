@@ -302,24 +302,24 @@ function App() {
   const selectedBg = theme === 'dark' ? 'rgba(56, 189, 248, 0.1)' : 'var(--accent-soft)';
 
   return (
-    <div className="container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div className="container" style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
 
       {/* THEME TOGGLE */}
-      <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 1100 }}>
-        <button onClick={toggleTheme} style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', cursor: 'pointer', boxShadow: 'var(--card-shadow)', display: 'flex' }}>
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1100 }}>
+        <button onClick={toggleTheme} style={{ padding: '8px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', cursor: 'pointer', boxShadow: 'var(--card-shadow)', display: 'flex' }}>
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
 
       {/* HEADER */}
-      <header style={{ marginBottom: '3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.5rem', letterSpacing: '-0.025em' }}>TalentScribe</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Professional Document Automation</p>
+      <header style={{ marginBottom: '2rem', textAlign: 'center', paddingTop: '1rem' }}>
+        <h1 style={{ fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem', letterSpacing: '-0.025em' }}>TalentScribe</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Professional Document Automation</p>
       </header>
 
       {/* TAB SWITCHER */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
-        <div style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <div className="tab-switcher" style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           {[
             { key: 'offer', label: 'Offer Letters', icon: <FileText size={18} /> },
             { key: 'agreement', label: 'Agreements', icon: <Handshake size={18} /> }
@@ -334,7 +334,7 @@ function App() {
       {activeTab === 'offer' ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* STATS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="stats-grid" style={{ marginBottom: '2rem' }}>
             {[
               { label: 'Total', val: offerStats.total, color: 'var(--accent-color)', icon: <Users size={20} /> },
               { label: 'Sent', val: offerStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
@@ -351,21 +351,21 @@ function App() {
           </div>
 
           {/* TOOLBAR */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', width: 'fit-content', flexWrap: 'nowrap' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="toolbar-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Offer Sent', 'Accepted', 'Rejected'].map(s => (
-                  <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: filterStatus === s ? 'var(--card-bg)' : 'transparent', color: filterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer' }}>{s}</button>
+                  <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: filterStatus === s ? 'var(--card-bg)' : 'transparent', color: filterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
                 ))}
               </div>
-              <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 8px' }} />
-              <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
+              <div className="hide-mobile" style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 8px' }} />
+              <div className="hide-mobile" style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 <button onClick={() => setViewMode('grid')} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: viewMode === 'grid' ? 'var(--card-bg)' : 'transparent', color: viewMode === 'grid' ? 'var(--accent-color)' : 'var(--text-muted)', cursor: 'pointer' }}><LayoutGrid size={18} /></button>
                 <button onClick={() => setViewMode('list')} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: viewMode === 'list' ? 'var(--card-bg)' : 'transparent', color: viewMode === 'list' ? 'var(--accent-color)' : 'var(--text-muted)', cursor: 'pointer' }}><List size={18} /></button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                 <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ padding: '6px 8px 6px 28px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', outline: 'none', width: '100px', fontSize: '0.75rem' }} />
@@ -421,11 +421,11 @@ function App() {
               No employees found matching your filters.
             </div>
           ) : viewMode === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+            <div className="responsive-grid">
               {filteredEmployees.map(emp => (
-                <div key={emp.id} style={{ 
-                  background: selectedIds.has(emp.id) ? selectedBg : 'var(--card-bg)', 
-                  padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)', 
+                <div key={emp.id} style={{
+                  background: selectedIds.has(emp.id) ? selectedBg : 'var(--card-bg)',
+                  padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)',
                   boxShadow: 'var(--card-shadow)', position: 'relative', display: 'flex', flexDirection: 'column',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   minHeight: '160px'
@@ -444,9 +444,8 @@ function App() {
                     <input type="checkbox" checked={selectedIds.has(emp.id)} onChange={() => {
                       const s = new Set(selectedIds); s.has(emp.id) ? s.delete(emp.id) : s.add(emp.id); setSelectedIds(s);
                     }} style={{ cursor: 'pointer', marginTop: '4px' }} onClick={e => e.stopPropagation()} />
-                    <div style={{ flex: 1, minWidth: 0, paddingRight: '70px' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 750, color: 'var(--text-primary)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name || "Unnamed"}</h3>
-                      <div style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 650, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.designation || "No Designation"}</div>
+                    <div style={{ flex: 1, minWidth: 0, paddingRight: '60px' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 }}>{emp.name || "Unnamed"}</h3>
                     </div>
                   </div>
 
@@ -537,7 +536,7 @@ function App() {
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* AGREEMENT TAB CONTENT */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="stats-grid" style={{ marginBottom: '2rem' }}>
             {[
               { label: 'Total Companies', val: agStats.total, color: 'var(--accent-color)', icon: <Handshake size={20} /> },
               { label: 'Sent', val: agStats.sent, color: 'var(--accent-color)', icon: <Send size={20} /> },
@@ -552,21 +551,21 @@ function App() {
           </div>
 
           {/* TOOLBAR */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', width: 'fit-content', flexWrap: 'nowrap' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="toolbar-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2rem', padding: '0.4rem 0.6rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 {['All', 'Pending', 'Agreement Sent'].map(s => (
-                  <button key={s} onClick={() => setAgFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: agFilterStatus === s ? 'var(--card-bg)' : 'transparent', color: agFilterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer' }}>{s}</button>
+                  <button key={s} onClick={() => setAgFilterStatus(s)} style={{ padding: '4px 8px', borderRadius: '6px', border: 'none', background: agFilterStatus === s ? 'var(--card-bg)' : 'transparent', color: agFilterStatus === s ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
                 ))}
               </div>
-              <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 8px' }} />
-              <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
+              <div className="hide-mobile" style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 8px' }} />
+              <div className="hide-mobile" style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '10px' }}>
                 <button onClick={() => setAgViewMode('grid')} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: agViewMode === 'grid' ? 'var(--card-bg)' : 'transparent', color: agViewMode === 'grid' ? 'var(--accent-color)' : 'var(--text-muted)', cursor: 'pointer' }}><LayoutGrid size={18} /></button>
                 <button onClick={() => setAgViewMode('list')} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: agViewMode === 'list' ? 'var(--card-bg)' : 'transparent', color: agViewMode === 'list' ? 'var(--accent-color)' : 'var(--text-muted)', cursor: 'pointer' }}><List size={18} /></button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="toolbar-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                 <input type="text" placeholder="Search..." value={agSearchTerm} onChange={e => setAgSearchTerm(e.target.value)} style={{ padding: '6px 8px 6px 28px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', outline: 'none', width: '100px', fontSize: '0.75rem' }} />
@@ -624,11 +623,11 @@ function App() {
               No companies found matching your filters.
             </div>
           ) : agViewMode === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', alignItems: 'stretch' }}>
+            <div className="responsive-grid">
               {filteredCompanies.map(co => (
-                <div key={co.id} style={{ 
-                  background: agSelectedIds.has(co.id) ? selectedBg : 'var(--card-bg)', 
-                  padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)', 
+                <div key={co.id} style={{
+                  background: agSelectedIds.has(co.id) ? selectedBg : 'var(--card-bg)',
+                  padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)',
                   boxShadow: 'var(--card-shadow)', position: 'relative', display: 'flex', flexDirection: 'column',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   minHeight: '160px'
@@ -647,11 +646,8 @@ function App() {
                     <input type="checkbox" checked={agSelectedIds.has(co.id)} onChange={() => {
                       const s = new Set(agSelectedIds); s.has(co.id) ? s.delete(co.id) : s.add(co.id); setAgSelectedIds(s);
                     }} style={{ cursor: 'pointer', marginTop: '4px' }} onClick={e => e.stopPropagation()} />
-                    <div style={{ flex: 1, minWidth: 0, paddingRight: '70px' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 750, color: 'var(--text-primary)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.name || "Unnamed Entity"}</h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <Mail size={14} /> {co.email || "no-contact@email.com"}
-                      </p>
+                    <div style={{ flex: 1, minWidth: 0, paddingRight: '60px' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 }}>{co.name || "Unnamed Entity"}</h3>
                     </div>
                   </div>
 

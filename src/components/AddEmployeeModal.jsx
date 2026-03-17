@@ -169,16 +169,17 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
             <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="modal-content"
                 style={{
                     background: 'var(--card-bg)',
-                    padding: '3rem',
-                    borderRadius: '32px',
                     width: '1000px',
                     maxWidth: '95vw',
                     maxHeight: '90vh',
                     overflowY: 'auto',
                     border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--card-shadow)'
+                    boxShadow: 'var(--card-shadow)',
+                    padding: '3rem',
+                    borderRadius: '32px'
                 }}
             >
                 {/* Header */}
@@ -221,7 +222,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             <User size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Personal Information</span>
                         </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'end' }}>
+                        <div className="form-grid-12">
                             <div style={{ gridColumn: 'span 4' }}>
                                 <InputGroup label="Employee ID" name="emp_id" placeholder="Enter ID (or leave for auto)" value={formData.emp_id} onChange={handleChange} disabled={isViewOnly} />
                             </div>
@@ -242,7 +243,7 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                             <Briefcase size={20} style={{ color: 'var(--accent-color)' }} />
                             <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Professional Details</span>
                         </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div className="form-grid-2">
                             <InputGroup label="Designation" name="designation" placeholder="e.g. Senior Principal" value={formData.designation} onChange={handleChange} error={errors.designation} required disabled={isViewOnly} />
                             <InputGroup label="Department" name="department" placeholder="e.g. Cloud Operations" value={formData.department} onChange={handleChange} error={errors.department} required disabled={isViewOnly} />
                             <InputGroup label="Employment Type" name="employment_type" value={formData.employment_type} onChange={handleChange} options={['Full Time', 'Internship']} disabled={isViewOnly} />
@@ -260,26 +261,26 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                 <IndianRupee size={20} style={{ color: 'var(--accent-color)' }} />
                                 <span style={{ borderBottom: '2px solid var(--accent-color)', paddingBottom: '4px', fontWeight: 'bold' }}>Compensation Structure</span>
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div className="form-grid-2">
                                 <InputGroup label="Annual CTC (₹)" name="ctc" type="number" value={formData.ctc} onChange={handleChange} required disabled={isViewOnly} />
                                 <InputGroup label="Basic Salary (Monthly) (₹)" name="basic_salary" type="number" value={formData.basic_salary} onChange={handleChange} required disabled={isViewOnly} />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className="form-grid-2" style={{ marginTop: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 1' }}>
                                     <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', color: 'var(--text-muted)' }}>
                                         PT (Monthly) (₹) <span style={{ color: '#ef4444' }}>*</span>
                                         {formData.ctc && parseFloat(formData.ctc) > 0 && (() => {
                                             const ctc = parseFloat(formData.ctc) || 0;
                                             const grossM = ctc / 12;
                                             const suggested = grossM <= 15000 ? 0 : grossM <= 20000 ? 150 : 200;
-                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Suggested: ₹{suggested}</span>;
+                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Sug: ₹{suggested}</span>;
                                         })()}
                                     </label>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         name="pt"
-                                        placeholder="Enter PT amount (0 if none)"
+                                        placeholder="Enter PT amount"
                                         value={formData.pt}
                                         onChange={(e) => {
                                             const val = e.target.value;
@@ -296,21 +297,21 @@ const AddEmployeeModal = ({ onClose, onSave, initialData, isViewOnly }) => {
                                         onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none' }}
                                     />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 1' }}>
                                     <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700', color: 'var(--text-muted)' }}>
                                         PF (Monthly) (₹) <span style={{ color: '#ef4444' }}>*</span>
                                         {formData.ctc && parseFloat(formData.ctc) > 0 && (() => {
                                             const ctc = parseFloat(formData.ctc) || 0;
                                             const basic = ctc * 0.40;
                                             const suggested = Math.round((basic * 0.12) / 12);
-                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Suggested: ₹{suggested}</span>;
+                                            return <span style={{ color: '#f59e0b', fontWeight: '500', textTransform: 'none', letterSpacing: '0' }}> — Sug: ₹{suggested}</span>;
                                         })()}
                                     </label>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         name="pf"
-                                        placeholder="Enter PF amount (0 if none)"
+                                        placeholder="Enter PF amount"
                                         value={formData.pf}
                                         onChange={(e) => {
                                             const val = e.target.value;
