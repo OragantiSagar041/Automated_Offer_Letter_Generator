@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.responses import StreamingResponse
 from typing import List
-from .. import database, schemas
+from app import database, schemas
 from bson import ObjectId
 from datetime import datetime, date, timezone
 import pandas as pd
@@ -228,8 +228,8 @@ def update_employee(employee_id: str, employee_update: schemas.EmployeeCreate, d
         hra = basic * 0.40
         conveyance = min(basic * 0.267, 1600 * 12)
         medical_allowance = min(basic * 0.208, 1250 * 12)
-        special = new_ctc - (basic + hra + conveyance + medical_allowance)
-        if special < 0: special = 0
+        special = float(new_ctc) - (basic + hra + conveyance + medical_allowance)
+        if special < 0: special = 0.0
         
         gross_monthly = (basic + hra + conveyance + medical_allowance + special) / 12
         gross_annual = basic + hra + conveyance + medical_allowance + special
@@ -331,8 +331,8 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                 jd = row.get(col_date)
                 try:
                     j_date = pd.to_datetime(jd).strftime("%Y-%m-%d") if not pd.isna(jd) else datetime.now().strftime("%Y-%m-%d")
-                except:
-                    j_date = datetime.now().strftime("%Y-%m-%d")
+                except Exception:
+                    j_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
                 # 4. ID
                 col_id = find_col(['emp_id'])
