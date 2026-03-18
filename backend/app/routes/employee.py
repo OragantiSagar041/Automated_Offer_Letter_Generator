@@ -106,6 +106,21 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
 
 @router.get("/", response_model=List[schemas.Employee])
 def read_employees(skip: int = 0, limit: int = 300, db = Depends(database.get_db)):
+    # 1. Bulk Update Expired Offers (Optimized)
+    db.employees.update_many(
+        {
+            "status": "Offer Sent",
+            "expires_at": {"$lt": datetime.utcnow()}
+        },
+        {
+            "$set": {
+                "status": "Rejected", 
+                "rejection_reason": "Offer Expired (24h)"
+            }
+        }
+    )
+
+    # 2. Fetch Employees
     cursor = db.employees.find().skip(skip).limit(limit)
     employees = [fix_id(doc) for doc in cursor]
     return employees
@@ -139,6 +154,20 @@ def read_employee(employee_id: str, db = Depends(database.get_db)):
     employee = db.employees.find_one({"_id": ObjectId(employee_id)})
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Single employee expiration check
+    if employee.get("status") == "Offer Sent" and employee.get("expires_at"):
+        exp = employee["expires_at"]
+        if isinstance(exp, str):
+            try: exp = datetime.fromisoformat(exp.replace("Z", "+00:00"))
+            except: pass
+        if isinstance(exp, datetime) and datetime.utcnow() > exp:
+            db.employees.update_one(
+                {"_id": employee["_id"]},
+                {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
+            )
+            employee["status"] = "Rejected"
+            employee["rejection_reason"] = "Offer Expired (24h)"
     
     return fix_id(employee)
 

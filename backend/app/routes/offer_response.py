@@ -280,6 +280,19 @@ def accept_offer(token: str, db = Depends(database.get_db)):
     candidate_name = employee.get("name", "Candidate")
     current_status = employee.get("status", "")
     
+    # Check if expired
+    expires_at = employee.get("expires_at")
+    if expires_at:
+        if isinstance(expires_at, str):
+            try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except: pass
+        if datetime.utcnow() > expires_at:
+            db.employees.update_one(
+                {"_id": ObjectId(employee_id)},
+                {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
+            )
+            return HTMLResponse(content=_build_invalid_page(), status_code=200)
+
     # Check if already responded
     if current_status in ("Accepted", "Rejected"):
         return HTMLResponse(
@@ -324,6 +337,19 @@ def reject_offer(token: str, db = Depends(database.get_db)):
     candidate_name = employee.get("name", "Candidate")
     current_status = employee.get("status", "")
     
+    # Check if expired
+    expires_at = employee.get("expires_at")
+    if expires_at:
+        if isinstance(expires_at, str):
+            try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except: pass
+        if datetime.utcnow() > expires_at:
+            db.employees.update_one(
+                {"_id": ObjectId(employee_id)},
+                {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
+            )
+            return HTMLResponse(content=_build_invalid_page(), status_code=200)
+
     # Check if already responded
     if current_status in ("Accepted", "Rejected"):
         return HTMLResponse(

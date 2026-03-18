@@ -15,6 +15,7 @@ class EmployeeBase(BaseModel):
     joining_date: Optional[date] = None
     location: Optional[str] = "Remote"
     employment_type: Optional[str] = "Full Time"
+    rejection_reason: Optional[str] = None
 
 class EmployeeCreate(EmployeeBase):
     ctc: float

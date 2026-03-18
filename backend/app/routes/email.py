@@ -50,11 +50,17 @@ def send_offer_email(request: EmailRequest, db = Depends(database.get_db)):
         employee_id=request.employee_id
     )
     
-    # 3. Update Status if Sent
+    # 3. Update Status and Expiration if Sent
     if result.get("status") == "success":
+        from datetime import datetime, timedelta
+        expires_at = datetime.utcnow() + timedelta(hours=24)
         db.employees.update_one(
             {"_id": ObjectId(request.employee_id)},
-            {"$set": {"status": "Offer Sent"}}
+            {"$set": {
+                "status": "Offer Sent",
+                "sent_at": datetime.utcnow(),
+                "expires_at": expires_at
+            }}
         )
     
     return result

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AddEmployeeModal from './components/AddEmployeeModal';
 import AddCompanyModal from './components/AddCompanyModal';
 import LetterModal from './components/LetterModal';
@@ -157,46 +157,48 @@ function App() {
     alert("Bulk sending process completed! Check individual statuses.");
   };
 
-  const filteredEmployees = employees.filter(emp => {
-    const s = searchTerm.toLowerCase();
-    const matchNameOrDesig = (emp.name || "").toLowerCase().includes(s) || (emp.designation || "").toLowerCase().includes(s);
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      const s = searchTerm.toLowerCase();
+      const matchNameOrDesig = (emp.name || "").toLowerCase().includes(s) || (emp.designation || "").toLowerCase().includes(s);
 
-    // Status Filter
-    const matchStatus = filterStatus === 'All' || emp.status === filterStatus;
+      // Status Filter
+      const matchStatus = filterStatus === 'All' || emp.status === filterStatus;
 
-    // Date Filter
-    let matchDate = true;
-    if (fromDate || toDate) {
-      // Try created_at, then joining_date as fallback
-      const dateVal = emp.created_at || emp.joining_date;
-      const d = dateVal ? new Date(dateVal) : null;
+      // Date Filter
+      let matchDate = true;
+      if (fromDate || toDate) {
+        // Try created_at, then joining_date as fallback
+        const dateVal = emp.created_at || emp.joining_date;
+        const d = dateVal ? new Date(dateVal) : null;
 
-      if (d && !isNaN(d.getTime())) {
-        if (fromDate) {
-          const start = new Date(fromDate);
-          start.setHours(0, 0, 0, 0);
-          if (d < start) matchDate = false;
+        if (d && !isNaN(d.getTime())) {
+          if (fromDate) {
+            const start = new Date(fromDate);
+            start.setHours(0, 0, 0, 0);
+            if (d < start) matchDate = false;
+          }
+          if (toDate) {
+            const end = new Date(toDate);
+            end.setHours(23, 59, 59, 999);
+            if (d > end) matchDate = false;
+          }
+        } else {
+          matchDate = false;
         }
-        if (toDate) {
-          const end = new Date(toDate);
-          end.setHours(23, 59, 59, 999);
-          if (d > end) matchDate = false;
-        }
-      } else {
-        matchDate = false;
       }
-    }
 
-    return matchNameOrDesig && matchStatus && matchDate;
-  });
+      return matchNameOrDesig && matchStatus && matchDate;
+    });
+  }, [employees, searchTerm, filterStatus, fromDate, toDate]);
 
-  const offerStats = {
+  const offerStats = useMemo(() => ({
     total: employees.length,
     sent: employees.filter(e => e.status === 'Offer Sent').length,
     accepted: employees.filter(e => e.status === 'Accepted').length,
     rejected: employees.filter(e => e.status === 'Rejected').length,
     pending: employees.filter(e => e.status === 'Pending' || !e.status).length
-  };
+  }), [employees]);
 
   // ────────── AGREEMENT HANDLERS ──────────
   const handleSaveCompany = (data) => {
@@ -398,7 +400,7 @@ function App() {
                 </button>
               )}
 
-              <button onClick={() => { setSelectedEmployeeForEdit(null); setIsModalOpen(true); }} style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '8px', fontWeight: 600, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Plus size={14} /> New</button>
+              <button onClick={() => { setSelectedEmployeeForEdit(null); setIsEmployeeViewOnly(false); setIsModalOpen(true); }} style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '8px', fontWeight: 600, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Plus size={14} /> New</button>
               <button
                 onClick={() => window.open(`${API_URL}/employees/template`)}
                 style={{ border: '1px solid var(--success-text)', background: 'transparent', color: 'var(--success-text)', padding: '8px 12px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}

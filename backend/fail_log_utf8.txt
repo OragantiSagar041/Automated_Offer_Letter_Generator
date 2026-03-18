@@ -1,0 +1,131 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\sagar\AppData\Local\Programs\Python\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend
+plugins: anyio-4.12.0, cov-7.0.0, mock-3.15.1
+collecting ... collected 2001 items / 2000 deselected / 1 selected
+
+tests/test_massive_2000.py::test_expiry_integration FAILED               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_expiry_integration ___________________________
+
+    def test_expiry_integration():
+        """Detailed Test: Verify the 24h Expiry Logic."""
+        # 1. Create Employee
+        emp_payload = {
+            "emp_id": "EXP-001",
+            "name": "Expire Test",
+            "email": "expire@test.com",
+            "designation": "Tester",
+            "ctc": 100000,
+            "basic_salary": 40000
+        }
+        create_res = client.post("/employees/", json=emp_payload)
+        emp_id = create_res.json()["id"]
+    
+        # 2. Mock 'Offer Sent' and 'expires_at' in the past
+        # Use the same mock_db as the conftest override
+        from tests.conftest import mock_db as db
+    
+        # CASE A: Recently Sent (Not Expired)
+        future = datetime.utcnow() + timedelta(hours=23)
+        db.employees.update_one(
+            {"_id": ObjectId(emp_id)},
+            {"$set": {"status": "Offer Sent", "expires_at": future}}
+        )
+    
+        # Fetch and check status
+        get_res = client.get(f"/employees/{emp_id}")
+        fetched = get_res.json()
+        assert fetched["status"] == "Offer Sent", f"Expected 'Offer Sent', got {fetched['status']}"
+    
+        # CASE B: Expired
+        past = datetime.utcnow() - timedelta(hours=1)
+        db.employees.update_one(
+            {"_id": ObjectId(emp_id)},
+            {"$set": {"status": "Offer Sent", "expires_at": past}}
+        )
+    
+        # Fetch and verify auto-rejection
+        get_res_expired = client.get(f"/employees/{emp_id}")
+        fetched_expired = get_res_expired.json()
+        assert fetched_expired["status"] == "Rejected", f"Expected 'Rejected' for expired offer, got {fetched_expired['status']}"
+>       assert fetched_expired.get("rejection_reason") == "Offer Expired (24h)"
+E       AssertionError: assert None == 'Offer Expired (24h)'
+E        +  where None = <built-in method get of dict object at 0x000002225F841300>('rejection_reason')
+E        +    where <built-in method get of dict object at 0x000002225F841300> = {'emp_id': 'EXP-001', 'name': 'Expire Test', 'email': 'expire@test.com', 'designation': 'Tester', 'department': None, 'joining_date': None, 'location': 'Remote', 'employment_type': 'Full Time', 'id': '69ba3a17de15f12b7ffea949', 'status': 'Rejected', 'compensation': {'ctc': 100000.0, 'basic_salary': 40000.0, 'hra': 16000.0, 'allowances': 25000.0, 'deductions': 4800.0, 'net_salary': 95200.0, 'pf': 4800.0, 'pt': 0.0, 'conveyance': 10680.0, 'medical_allowance': 8320.0, 'special_allowance': 25000.0, 'gross_salary': 100000.0}}.get
+
+tests\test_massive_2000.py:167: AssertionError
+---------------------------- Captured stderr call -----------------------------
+INFO:app.main:Incoming request: POST http://testserver/employees/
+INFO:app.main:Response status: 200
+INFO:httpx:HTTP Request: POST http://testserver/employees/ "HTTP/1.1 200 OK"
+INFO:app.main:Incoming request: GET http://testserver/employees/69ba3a17de15f12b7ffea949
+INFO:app.main:Response status: 200
+INFO:httpx:HTTP Request: GET http://testserver/employees/69ba3a17de15f12b7ffea949 "HTTP/1.1 200 OK"
+INFO:app.main:Incoming request: GET http://testserver/employees/69ba3a17de15f12b7ffea949
+INFO:app.main:Response status: 200
+INFO:httpx:HTTP Request: GET http://testserver/employees/69ba3a17de15f12b7ffea949 "HTTP/1.1 200 OK"
+------------------------------ Captured log call ------------------------------
+INFO     app.main:main.py:19 Incoming request: POST http://testserver/employees/
+INFO     app.main:main.py:21 Response status: 200
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/employees/ "HTTP/1.1 200 OK"
+INFO     app.main:main.py:19 Incoming request: GET http://testserver/employees/69ba3a17de15f12b7ffea949
+INFO     app.main:main.py:21 Response status: 200
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/employees/69ba3a17de15f12b7ffea949 "HTTP/1.1 200 OK"
+INFO     app.main:main.py:19 Incoming request: GET http://testserver/employees/69ba3a17de15f12b7ffea949
+INFO     app.main:main.py:21 Response status: 200
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/employees/69ba3a17de15f12b7ffea949 "HTTP/1.1 200 OK"
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Programs\Python\Python314\Lib\site-packages\bson\__init__.py:116
+  C:\Users\sagar\AppData\Local\Programs\Python\Python314\Lib\site-packages\bson\__init__.py:116: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+    EPOCH_NAIVE = datetime.datetime.utcfromtimestamp(0)
+
+app\schemas.py:39
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:39: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Employee(EmployeeBase):
+
+app\schemas.py:62
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:62: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Payroll(PayrollBase):
+
+app\schemas.py:71
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LetterRequest(BaseModel):
+
+app\schemas.py:80
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\schemas.py:80: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmailRequest(BaseModel):
+
+app\routes\agreement_company.py:39
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\agreement_company.py:39: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CompanyResponse(CompanyBase):
+
+tests/test_massive_2000.py::test_expiry_integration
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:27: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    emp_data = employee.dict()
+
+tests/test_massive_2000.py::test_expiry_integration
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:84: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_massive_2000.py::test_expiry_integration
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\tests\test_massive_2000.py:145: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    future = datetime.utcnow() + timedelta(hours=23)
+
+tests/test_massive_2000.py::test_expiry_integration
+tests/test_massive_2000.py::test_expiry_integration
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\app\routes\employee.py:164: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    if isinstance(exp, datetime) and datetime.utcnow() > exp:
+
+tests/test_massive_2000.py::test_expiry_integration
+  C:\Users\sagar\Downloads\Automated_Offer_Letter_Generator\backend\tests\test_massive_2000.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    past = datetime.utcnow() - timedelta(hours=1)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_massive_2000.py::test_expiry_integration - AssertionError: assert None == 'Offer Expired (24h)'
+ +  where None = <built-in method get of dict object at 0x000002225F841300>('rejection_reason')
+ +    where <built-in method get of dict object at 0x000002225F841300> = {'emp_id': 'EXP-001', 'name': 'Expire Test', 'email': 'expire@test.com', 'designation': 'Tester', 'department': None, 'joining_date': None, 'location': 'Remote', 'employment_type': 'Full Time', 'id': '69ba3a17de15f12b7ffea949', 'status': 'Rejected', 'compensation': {'ctc': 100000.0, 'basic_salary': 40000.0, 'hra': 16000.0, 'allowances': 25000.0, 'deductions': 4800.0, 'net_salary': 95200.0, 'pf': 4800.0, 'pt': 0.0, 'conveyance': 10680.0, 'medical_allowance': 8320.0, 'special_allowance': 25000.0, 'gross_salary': 100000.0}}.get
+=============== 1 failed, 2000 deselected, 12 warnings in 0.35s ===============
