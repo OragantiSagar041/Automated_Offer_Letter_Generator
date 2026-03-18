@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from typing import List
 from .. import database, schemas
 from bson import ObjectId
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import pandas as pd
 import io
 
@@ -24,7 +24,7 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
     if db.employees.find_one({"email": employee.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    emp_data = employee.dict()
+    emp_data = employee.model_dump()
     ctc = emp_data.pop('ctc')
     basic = emp_data.pop('basic_salary')
     manual_pt = emp_data.pop('pt', None)  # Monthly PT from frontend
@@ -81,7 +81,7 @@ def create_employee(employee: schemas.EmployeeCreate, db = Depends(database.get_
     new_employee_doc = {
         **emp_data,
         "status": "Pending",
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
         "compensation": {
             "ctc": ctc,
             "basic_salary": round(basic_calculated, 2),
@@ -161,7 +161,7 @@ def read_employee(employee_id: str, db = Depends(database.get_db)):
         if isinstance(exp, str):
             try: exp = datetime.fromisoformat(exp.replace("Z", "+00:00"))
             except: pass
-        if isinstance(exp, datetime) and datetime.utcnow() > exp:
+        if isinstance(exp, datetime) and datetime.now(timezone.utc) > exp:
             db.employees.update_one(
                 {"_id": employee["_id"]},
                 {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
@@ -210,7 +210,7 @@ def update_employee(employee_id: str, employee_update: schemas.EmployeeCreate, d
     if not existing:
         raise HTTPException(status_code=404, detail="Employee not found")
 
-    update_data = employee_update.dict()
+    update_data = employee_update.model_dump()
     new_ctc = update_data.pop('ctc', None)
     update_data.pop('basic_salary', None)
     manual_pt = update_data.pop('pt', None)
@@ -392,7 +392,7 @@ async def upload_employees_bulk(file: UploadFile = File(...), db = Depends(datab
                     "location": row.get('location', 'Remote'),
                     "employment_type": row.get('employment_type', 'Full Time'),
                     "status": "Pending",
-                    "created_at": datetime.utcnow(),
+                    "created_at": datetime.now(timezone.utc),
                     "compensation": {
                         "ctc": ctc,
                         "basic_salary": round(basic, 2),

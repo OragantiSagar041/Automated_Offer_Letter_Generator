@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from .. import database
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(
     prefix="/offer",
@@ -286,7 +286,7 @@ def accept_offer(token: str, db = Depends(database.get_db)):
         if isinstance(expires_at, str):
             try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
             except: pass
-        if datetime.utcnow() > expires_at:
+        if datetime.now(timezone.utc) > expires_at:
             db.employees.update_one(
                 {"_id": ObjectId(employee_id)},
                 {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
@@ -305,7 +305,7 @@ def accept_offer(token: str, db = Depends(database.get_db)):
         {"_id": ObjectId(employee_id)},
         {"$set": {
             "status": "Accepted",
-            "offer_responded_at": datetime.utcnow(),
+            "offer_responded_at": datetime.now(timezone.utc),
             "offer_response": "accepted"
         }}
     )
@@ -343,7 +343,7 @@ def reject_offer(token: str, db = Depends(database.get_db)):
         if isinstance(expires_at, str):
             try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
             except: pass
-        if datetime.utcnow() > expires_at:
+        if datetime.now(timezone.utc) > expires_at:
             db.employees.update_one(
                 {"_id": ObjectId(employee_id)},
                 {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
@@ -362,7 +362,7 @@ def reject_offer(token: str, db = Depends(database.get_db)):
         {"_id": ObjectId(employee_id)},
         {"$set": {
             "status": "Rejected",
-            "offer_responded_at": datetime.utcnow(),
+            "offer_responded_at": datetime.now(timezone.utc),
             "offer_response": "rejected"
         }}
     )

@@ -31,12 +31,13 @@ def send_offer_email(request: EmailRequest, db = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="Employee not found")
 
     # Decode PDF if present
-    pdf_bytes = None
-    if request.pdf_base64:
+    pdf_bytes: Optional[bytes] = None
+    b64_str = request.pdf_base64
+    if b64_str and isinstance(b64_str, str):
         # Remove data URI header if present
-        if "base64," in request.pdf_base64:
-            request.pdf_base64 = request.pdf_base64.split("base64,")[1]
-        pdf_bytes = base64.b64decode(request.pdf_base64)
+        if "base64," in b64_str:
+            b64_str = b64_str.split("base64,")[1]
+        pdf_bytes = base64.b64decode(b64_str)
 
     # 2. Send Email (Backend Process)
     result = email_client.send_offer_letter(
