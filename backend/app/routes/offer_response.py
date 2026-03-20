@@ -262,17 +262,13 @@ def _build_invalid_page():
 @router.get("/accept")
 def accept_offer(token: str, db = Depends(database.get_db)):
     """Handle offer acceptance from email link."""
-    
-    # Look up the token in offer_tokens collection
     token_doc = db.offer_tokens.find_one({"token": token})
-    
     if not token_doc:
         return HTMLResponse(content=_build_invalid_page(), status_code=404)
     
     employee_id = token_doc["employee_id"]
     company_name = token_doc.get("company_name", "The Company")
     
-    # Get employee
     employee = db.employees.find_one({"_id": ObjectId(employee_id)})
     if not employee:
         return HTMLResponse(content=_build_invalid_page(), status_code=404)
@@ -285,22 +281,21 @@ def accept_offer(token: str, db = Depends(database.get_db)):
     if expires_at:
         if isinstance(expires_at, str):
             try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-            except: pass
-        if datetime.now(timezone.utc) > expires_at:
-            db.employees.update_one(
-                {"_id": ObjectId(employee_id)},
-                {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
-            )
-            return HTMLResponse(content=_build_invalid_page(), status_code=200)
+            except: expires_at = None
+        
+        if expires_at and hasattr(expires_at, "tzinfo"):
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) > expires_at:
+                db.employees.update_one(
+                    {"_id": ObjectId(employee_id)},
+                    {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
+                )
+                return HTMLResponse(content=_build_invalid_page(), status_code=200)
 
-    # Check if already responded
     if current_status in ("Accepted", "Rejected"):
-        return HTMLResponse(
-            content=_build_already_responded_page(current_status, candidate_name, company_name),
-            status_code=200
-        )
+        return HTMLResponse(content=_build_already_responded_page(current_status, candidate_name, company_name), status_code=200)
     
-    # Update status to Accepted
     db.employees.update_one(
         {"_id": ObjectId(employee_id)},
         {"$set": {
@@ -309,27 +304,19 @@ def accept_offer(token: str, db = Depends(database.get_db)):
             "offer_response": "accepted"
         }}
     )
-    
-    return HTMLResponse(
-        content=_build_response_page("accepted", candidate_name, company_name),
-        status_code=200
-    )
+    return HTMLResponse(content=_build_response_page("accepted", candidate_name, company_name), status_code=200)
 
 
 @router.get("/reject")
 def reject_offer(token: str, db = Depends(database.get_db)):
     """Handle offer rejection from email link."""
-    
-    # Look up the token
     token_doc = db.offer_tokens.find_one({"token": token})
-    
     if not token_doc:
         return HTMLResponse(content=_build_invalid_page(), status_code=404)
     
     employee_id = token_doc["employee_id"]
     company_name = token_doc.get("company_name", "The Company")
     
-    # Get employee
     employee = db.employees.find_one({"_id": ObjectId(employee_id)})
     if not employee:
         return HTMLResponse(content=_build_invalid_page(), status_code=404)
@@ -342,22 +329,21 @@ def reject_offer(token: str, db = Depends(database.get_db)):
     if expires_at:
         if isinstance(expires_at, str):
             try: expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-            except: pass
-        if datetime.now(timezone.utc) > expires_at:
-            db.employees.update_one(
-                {"_id": ObjectId(employee_id)},
-                {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
-            )
-            return HTMLResponse(content=_build_invalid_page(), status_code=200)
+            except: expires_at = None
+        
+        if expires_at and hasattr(expires_at, "tzinfo"):
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) > expires_at:
+                db.employees.update_one(
+                    {"_id": ObjectId(employee_id)},
+                    {"$set": {"status": "Rejected", "rejection_reason": "Offer Expired (24h)"}}
+                )
+                return HTMLResponse(content=_build_invalid_page(), status_code=200)
 
-    # Check if already responded
     if current_status in ("Accepted", "Rejected"):
-        return HTMLResponse(
-            content=_build_already_responded_page(current_status, candidate_name, company_name),
-            status_code=200
-        )
+        return HTMLResponse(content=_build_already_responded_page(current_status, candidate_name, company_name), status_code=200)
     
-    # Update status to Rejected
     db.employees.update_one(
         {"_id": ObjectId(employee_id)},
         {"$set": {
@@ -366,8 +352,4 @@ def reject_offer(token: str, db = Depends(database.get_db)):
             "offer_response": "rejected"
         }}
     )
-    
-    return HTMLResponse(
-        content=_build_response_page("rejected", candidate_name, company_name),
-        status_code=200
-    )
+    return HTMLResponse(content=_build_response_page("rejected", candidate_name, company_name), status_code=200)

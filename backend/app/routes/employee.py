@@ -110,7 +110,7 @@ def read_employees(skip: int = 0, limit: int = 300, db = Depends(database.get_db
     db.employees.update_many(
         {
             "status": "Offer Sent",
-            "expires_at": {"$lt": datetime.utcnow()}
+            "expires_at": {"$lt": datetime.now(timezone.utc)}
         },
         {
             "$set": {
